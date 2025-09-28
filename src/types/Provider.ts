@@ -1,4 +1,4 @@
-import { Message } from 'react-chatbotify';
+import { ChatMessage } from './ChatMessage';
 
 /**
  * Interface that all LLM providers must implement.
@@ -9,5 +9,6 @@ export type Provider = {
 	 *
 	 * @param messages messages to send
 	 */
-	sendMessages(messages: Message[]): AsyncGenerator<string>;
+	sendMessages(messages: ChatMessage[]): AsyncGenerator<string>;
 };
+

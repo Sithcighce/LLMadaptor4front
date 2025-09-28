@@ -3,7 +3,9 @@
  */
 type GeminiProviderMessage = {
 	role: 'user' | 'model';
-	content: string;
+	parts: Array<{
+		text: string;
+	}>;
 };
 
 export type { GeminiProviderMessage };

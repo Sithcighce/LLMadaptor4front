@@ -27,66 +27,94 @@
   <img height="400px" src="https://github.com/user-attachments/assets/c78f88f9-bbb7-4bad-91a8-13633ce35d4a" />
 </p>
 
-**LLM Connector** is a plugin that provides out-of-the-box integrations with large language models (LLMs). The plugin ships with built-in support for 3 default LLM providers which are [**OpenAI**](docs/providers/OpenAI.md), [**Gemini**](/docs/providers/Gemini.md) and [**WebLlm (in-browser)**](/docs/providers/WebLlm.md). Developers may also create their own providers beyond those that are provided to support niche or custom use cases. The plugin also provides generalized configurations for managing streaming behavior, chat history inclusion and audio output, greatly simplifying the amount of custom logic required from developers.
+**LLM Connector** ships with both a drop-in React component for browser-only apps and a React ChatBotify plugin for conversational flows. It includes built-in adapters for four popular providers — [**OpenAI**](docs/providers/OpenAI.md), [**Anthropic**](docs/providers/Anthropic.md), [**Gemini**](/docs/providers/Gemini.md) and [**WebLlm (in-browser)**](/docs/providers/WebLlm.md). Developers can still extend the connector with custom providers, while the core handles streaming, message history management, audio hand-offs and consistent error handling across providers.
 
 For support, join the plugin community on [**Discord**](https://discord.gg/J6pA4v3AMW) to connect with other developers and get help.
 
 ### Quickstart
 
-The plugin is incredibly straightforward to use and is [**available on npm**](https://www.npmjs.com/package/@rcb-plugins/llm-connector). Simply follow the steps below:
+Install the package from npm:
 
-1. Install the plugin with the following command within your project folder:
-   ```bash
-   npm install @rcb-plugins/llm-connector
+```bash
+npm install @rcb-plugins/llm-connector
+```
+
+#### A. React component (pure front-end)
+
+Use the `LlmConnector` component when you want users to bring their own API keys and call providers directly from the browser.
+
+```tsx
+import { useState } from 'react';
+import { LlmConnector, type LlmClient } from '@rcb-plugins/llm-connector';
+
+const MyTool = () => {
+  const [client, setClient] = useState<LlmClient | null>(null);
+
+  return (
+    <>
+      <LlmConnector
+        onReady={(readyClient, context) => {
+          console.log('Connected provider', context.providerId, context.rawConfig.model);
+          setClient(readyClient);
+        }}
+      />
+
+      <button
+        onClick={async () => {
+          if (!client) return;
+          await client.chat({ messages: [{ role: 'user', content: 'Hello!' }] });
+        }}
+      >
+        Send sample request
+      </button>
+    </>
+  );
+};
+```
+
+- The component persists configuration securely in `localStorage` (per browser) and never uploads API keys.
+- `onReady` exposes both a unified `LlmClient` instance and the raw provider configuration so you can persist additional metadata if required.
+
+#### B. React ChatBotify plugin
+
+Prefer the plugin when you are already building conversations with [React ChatBotify](https://react-chatbotify.com/).
+
+1. Import and register the plugin:
+   ```tsx
+   import ChatBot from 'react-chatbotify';
+   import LlmConnector from '@rcb-plugins/llm-connector';
+
+   const MyBot = () => (
+     <ChatBot plugins={[LlmConnector()]} />
+   );
    ```
 
-2. Import the plugin:
-   ```javascript
-   import LlmConnector from "@rcb-plugins/llm-connector";
-   ```
+2. Configure an `llmConnector` block with your preferred provider:
+   ```tsx
+   import ChatBot from 'react-chatbotify';
+   import LlmConnector, { LlmConnectorBlock, OpenaiProvider } from '@rcb-plugins/llm-connector';
 
-3. Initialize the plugin within the `plugins` prop of `ChatBot`:
-   ```javascript
-   import ChatBot from "react-chatbotify";
-   import LlmConnector from "@rcb-plugins/llm-connector";
-
-   const MyComponent = () => {
-     return (
-       <ChatBot plugins=[LlmConnector()]/>
-     );
-   };
-   ```
-
-4. Define an `llmConnector` attribute within the [**Block**](https://react-chatbotify.com/docs/concepts/conversations#block) that requires LLM integration. Import your desired LLM provider (or create your own!) and pass it as a value to the `provider` within the `llmConnector` attribute. You may refer to the setup below which uses the [**WebLlmProvider**](/docs/providers/WebLlm.md) for a better idea (details covered later): 
-   ```javascript
-   import ChatBot from "react-chatbotify";
-   import LlmConnector, { LlmConnectorBlock, WebLlmProvider } from "@rcb-plugins/llm-connector";
-
-   const MyComponent = () => {
-     const flow = {
-       start: {
-         message: "What would you like to find out today?",
-         transition: 0,
-         path: "llm_example_block",
+   const flow = {
+     start: {
+       message: 'Ask me anything about space!',
+       transition: 0,
+       path: 'talk_to_space',
+     },
+     talk_to_space: {
+       llmConnector: {
+         provider: new OpenaiProvider({
+           mode: 'direct',
+           model: 'gpt-4.1-mini',
+           apiKey: process.env.OPENAI_API_KEY!,
+         }),
        },
-       llm_example_block: {
-         llmConnector: {
-            provider: new WebLlmProvider({
-             model: 'Qwen2-0.5B-Instruct-q4f16_1-MLC',
-           }),
-         }
-       } as LlmConnectorBlock,
-       // ... other blocks as necessary
-     }
-     return (
-       <ChatBot plugins=[LlmConnector()]/>
-     );
+     } as LlmConnectorBlock,
    };
+
+   const MyBot = () => <ChatBot plugins={[LlmConnector()]} flow={flow} />;
    ```
 
-The quickstart above shows how LLM integrations can be done within the `llm_example_block`, where we rely on a default `WebLlmProvider` with minimal configurations to perform inference in the browser. The full onfiguration guide for the default providers can be found [**here**](/docs/providers/). For those who prefer more hands-on experimentation, the documentation website for the React ChatBotify Core Library also contains live examples for this plugin. You will find those examples under the [**LLM Providers**](#llm-providers) section.
-
-### Features
+The full configuration guides for each provider live under [`docs/providers/`](docs/providers/).### Features
 
 **LLM Connector** is a lightweight plugin that provides the following features to your chatbot:
 - Simple & Fast LLM Integrations (via common [default providers](/docs/providers/))
@@ -257,3 +285,6 @@ you may simply raise bugs or suggestions by opening an issue.
 ### Others
 
 For any questions regarding the project, please reach out for support via **[discord](https://discord.gg/J6pA4v3AMW).**
+
+
+

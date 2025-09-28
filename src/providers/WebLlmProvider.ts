@@ -1,6 +1,6 @@
 import { WebLlmProviderConfig } from '../types/provider-config/WebLlmProviderConfig';
 import { Provider } from '../types/Provider';
-import { Message } from 'react-chatbotify';
+import { ChatMessage } from '../types/ChatMessage';
 import { ChatCompletionChunk, MLCEngine, MLCEngineConfig } from '@mlc-ai/web-llm';
 import { WebLlmProviderMessage } from '../types/provider-message/WebLlmProviderMessage';
 
@@ -13,7 +13,7 @@ class WebLlmProvider implements Provider {
 	private responseFormat!: 'stream' | 'json';
 	private engineConfig: MLCEngineConfig;
 	private chatCompletionOptions: Record<string, unknown>;
-	private messageParser?: (messages: Message[]) => WebLlmProviderMessage[];
+	private messageParser?: (messages: ChatMessage[]) => WebLlmProviderMessage[];
 	private engine?: MLCEngine;
 	private debug: boolean = false;
 
@@ -49,7 +49,7 @@ class WebLlmProvider implements Provider {
 	 *
 	 * @param messages messages to include in the request
 	 */
-	public async *sendMessages(messages: Message[]): AsyncGenerator<string> {
+	public async *sendMessages(messages: ChatMessage[]): AsyncGenerator<string> {
 		if (!this.engine) {
 			await this.createEngine();
 		}
@@ -61,7 +61,7 @@ class WebLlmProvider implements Provider {
 				responseFormat: this.responseFormat,
 				engineConfig: this.engineConfig,
 				chatCompletionOptions: this.chatCompletionOptions,
-				messages: this.constructBodyWithMessages(messages).messages, // Log messages being sent
+				messages: this.constructBodyWithMessages(messages).messages,
 			});
 		}
 
@@ -84,18 +84,16 @@ class WebLlmProvider implements Provider {
 	}
 
 	/**
-	 * Maps the chatbot message sender to the provider message sender.
-	 *
-	 * @param sender sender from the chatbot
+	 * Ensures provider receives a known role.
 	 */
-	private roleMap = (sender: string): 'system' | 'user' | 'assistant' => {
-		switch (sender) {
-			case 'USER':
-				return 'user';
-			case 'SYSTEM':
+	private toProviderRole = (role: ChatMessage['role']): 'system' | 'user' | 'assistant' => {
+		switch (role) {
+			case 'assistant':
+				return 'assistant';
+			case 'system':
 				return 'system';
 			default:
-				return 'assistant';
+				return 'user';
 		}
 	};
 
@@ -104,32 +102,24 @@ class WebLlmProvider implements Provider {
 	 *
 	 * @param messages messages to parse
 	 */
-	private constructBodyWithMessages = (messages: Message[]) => {
-		let parsedMessages;
+	private constructBodyWithMessages = (messages: ChatMessage[]) => {
+		let parsedMessages: WebLlmProviderMessage[];
 		if (this.messageParser) {
-			// use parser if specified
 			parsedMessages = this.messageParser(messages);
 		} else {
-			// only handle message contents of type string and exclude chatbot system messages
-			const filteredMessages = messages.filter(
-				(message) => typeof message.content === 'string' && message.sender.toUpperCase() !== 'SYSTEM'
-			);
-			parsedMessages = filteredMessages.map((message) => {
-				const role = this.roleMap(message.sender.toUpperCase()) as 'user' | 'assistant' | 'system';
-				const text = message.content as string;
-				return {
-					role,
-					content: text,
-				};
-			});
+			parsedMessages = messages
+				.filter((message) => typeof message.content === 'string')
+				.map((message) => ({
+					role: this.toProviderRole(message.role) as 'system' | 'user' | 'assistant',
+					content: message.content,
+				}));
 		}
 
-		// append system message if specified
 		if (this.systemMessage) {
 			parsedMessages = [
 				{
-					role: 'system' as 'user' | 'assistant' | 'system',
-					content: this.systemMessage as string,
+					role: 'system',
+					content: this.systemMessage,
 				},
 				...parsedMessages,
 			];

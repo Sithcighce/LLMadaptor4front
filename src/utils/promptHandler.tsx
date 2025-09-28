@@ -1,5 +1,6 @@
 import { formatStream } from './streamController';
 import { Provider } from '../types/Provider';
+import { ChatMessage } from '../types/ChatMessage';
 import { Message } from 'react-chatbotify';
 
 /**
@@ -14,6 +15,31 @@ const speakAndForward = async function* (stream: AsyncGenerator<string>, speakAu
 		yield chunk;
 	}
 };
+
+/**
+ * Maps chatbot message sender to connector role.
+ */
+const toChatMessageRole = (sender: string): ChatMessage['role'] => {
+	switch (sender.toUpperCase()) {
+		case 'USER':
+			return 'user';
+		case 'SYSTEM':
+			return 'system';
+		default:
+			return 'assistant';
+	}
+};
+
+/**
+ * Normalizes React ChatBotify messages into the connector message shape.
+ */
+const toChatMessages = (messages: Message[]): ChatMessage[] =>
+	messages
+		.filter((message) => typeof message.content === 'string')
+		.map((message) => ({
+			role: toChatMessageRole(message.sender ?? ''),
+			content: String(message.content),
+		}));
 
 /**
  * Processes the prompt using the provided model connector.
@@ -65,7 +91,7 @@ const handlePrompt = async (
 		getIsChatBotVisible,
 	} = actions;
 
-	const rawStream = refs.providerRef.current.sendMessages(messages);
+	const rawStream = refs.providerRef.current.sendMessages(toChatMessages(messages));
 	const outputType = refs.outputTypeRef.current;
 	const outputSpeed = refs.outputSpeedRef.current;
 

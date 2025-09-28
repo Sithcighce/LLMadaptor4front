@@ -1,4 +1,4 @@
-import { Message } from 'react-chatbotify';
+import { ChatMessage } from '../ChatMessage';
 import { WebLlmProviderMessage } from '../provider-message/WebLlmProviderMessage';
 import { MLCEngineConfig } from '@mlc-ai/web-llm';
 
@@ -11,7 +11,7 @@ type WebLlmProviderConfig = {
 	responseFormat?: 'stream' | 'json';
 	engineConfig?: MLCEngineConfig;
 	chatCompletionOptions?: Record<string, unknown>;
-	messageParser?: (messages: Message[]) => WebLlmProviderMessage[];
+	messageParser?: (messages: ChatMessage[]) => WebLlmProviderMessage[];
 	debug?: boolean;
 };
 

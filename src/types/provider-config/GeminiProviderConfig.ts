@@ -1,4 +1,4 @@
-import { Message } from 'react-chatbotify';
+import { ChatMessage } from '../ChatMessage';
 import { GeminiProviderMessage } from '../provider-message/GeminiProviderMessage';
 
 /**
@@ -13,8 +13,8 @@ type DirectConfig = {
 	baseUrl?: string;
 	method?: string;
 	headers?: Record<string, string>;
-	body?: Record<string, string>;
-	messageParser?: (messages: Message[]) => GeminiProviderMessage[];
+	body?: Record<string, unknown>;
+	messageParser?: (messages: ChatMessage[]) => GeminiProviderMessage[];
 	debug?: boolean;
 };
 
@@ -29,8 +29,8 @@ type ProxyConfig = {
 	responseFormat?: 'stream' | 'json';
 	method?: string;
 	headers?: Record<string, string>;
-	body?: Record<string, string>;
-	messageParser?: (messages: Message[]) => GeminiProviderMessage[];
+	body?: Record<string, unknown>;
+	messageParser?: (messages: ChatMessage[]) => GeminiProviderMessage[];
 	debug?: boolean;
 };
 

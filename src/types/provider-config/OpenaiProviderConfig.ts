@@ -1,4 +1,4 @@
-import { Message } from 'react-chatbotify';
+import { ChatMessage } from '../ChatMessage';
 import { OpenaiProviderMessage } from '../provider-message/OpenaiProviderMessage';
 
 /**
@@ -13,8 +13,8 @@ type DirectConfig = {
 	baseUrl?: string;
 	method?: string;
 	headers?: Record<string, string>;
-	body?: Record<string, string>;
-	messageParser?: (messages: Message[]) => OpenaiProviderMessage[];
+	body?: Record<string, unknown>;
+	messageParser?: (messages: ChatMessage[]) => OpenaiProviderMessage[];
 	debug?: boolean;
 };
 
@@ -29,8 +29,8 @@ type ProxyConfig = {
 	responseFormat?: 'stream' | 'json';
 	method?: string;
 	headers?: Record<string, string>;
-	body?: Record<string, string>;
-	messageParser?: (messages: Message[]) => OpenaiProviderMessage[];
+	body?: Record<string, unknown>;
+	messageParser?: (messages: ChatMessage[]) => OpenaiProviderMessage[];
 	debug?: boolean;
 };
 
