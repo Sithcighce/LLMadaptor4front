@@ -9,39 +9,39 @@
   <a href="https://www.npmjs.com/package/@rcb-plugins/llm-connector"> <img src="https://img.shields.io/badge/react-16--19-orange?logo=react&label=react" /> </a>
 </p>
 
-## Table of Contents
+## 目录
 
-* [Introduction](#introduction)
-* [Quickstart](#quickstart)
-* [Features](#features)
-* [API Documentation](#api-documentation)
-* [Team](#team)
-* [Contributing](#contributing)
-* [Others](#others)
+* [简介](#简介)
+* [快速开始](#快速开始)
+* [功能特性](#功能特性)
+* [API 文档](#api-文档)
+* [团队](#团队)
+* [贡献指南](#贡献指南)
+* [其它](#其它)
 
-### Introduction
+### 简介
 
-<p align="center"">
+<p align="center">
   <img height="400px" src="https://github.com/user-attachments/assets/72813239-7bb7-4966-a1b9-0ae1d0f7c6d0" />
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   <img height="400px" src="https://github.com/user-attachments/assets/c78f88f9-bbb7-4bad-91a8-13633ce35d4a" />
 </p>
 
-**LLM Connector** ships with both a drop-in React component for browser-only apps and a React ChatBotify plugin for conversational flows. It includes built-in adapters for four popular providers — [**OpenAI**](docs/providers/OpenAI.md), [**Anthropic**](docs/providers/Anthropic.md), [**Gemini**](/docs/providers/Gemini.md) and [**WebLlm (in-browser)**](/docs/providers/WebLlm.md). Developers can still extend the connector with custom providers, while the core handles streaming, message history management, audio hand-offs and consistent error handling across providers.
+**LLM Connector** 同时提供两种形态：一个用于纯前端应用的 React 即插即用组件，以及一个面向 React ChatBotify 的聊天插件。项目内置四种常用适配器 —— [**OpenAI**](docs/providers/OpenAI.md)、[**Anthropic**](docs/providers/Anthropic.md)、[**Gemini**](docs/providers/Gemini.md) 与 [**WebLlm（浏览器推理）**](docs/providers/WebLlm.md)。开发者也可以根据需要扩展自定义 Provider，而公共核心负责流式输出、消息历史管理、音频播报和统一的错误处理。
 
-For support, join the plugin community on [**Discord**](https://discord.gg/J6pA4v3AMW) to connect with other developers and get help.
+如果需要帮助，可以加入插件社区的 [**Discord**](https://discord.gg/J6pA4v3AMW)。
 
-### Quickstart
+### 快速开始
 
-Install the package from npm:
+安装 npm 包：
 
 ```bash
 npm install @rcb-plugins/llm-connector
 ```
 
-#### A. React component (pure front-end)
+#### A. React 组件（纯前端方案）
 
-Use the `LlmConnector` component when you want users to bring their own API keys and call providers directly from the browser.
+当你希望用户“自带 API Key”，并在浏览器中直接调用模型时，使用 `LlmConnector` 组件。
 
 ```tsx
 import { useState } from 'react';
@@ -54,7 +54,7 @@ const MyTool = () => {
     <>
       <LlmConnector
         onReady={(readyClient, context) => {
-          console.log('Connected provider', context.providerId, context.rawConfig.model);
+          console.log('已连接的服务商', context.providerId, context.rawConfig.model);
           setClient(readyClient);
         }}
       />
@@ -62,24 +62,24 @@ const MyTool = () => {
       <button
         onClick={async () => {
           if (!client) return;
-          await client.chat({ messages: [{ role: 'user', content: 'Hello!' }] });
+          await client.chat({ messages: [{ role: 'user', content: '你好！' }] });
         }}
       >
-        Send sample request
+        发送测试请求
       </button>
     </>
   );
 };
 ```
 
-- The component persists configuration securely in `localStorage` (per browser) and never uploads API keys.
-- `onReady` exposes both a unified `LlmClient` instance and the raw provider configuration so you can persist additional metadata if required.
+- 组件会将配置安全地持久化到 `localStorage`，不会上传 API Key。
+- `onReady` 同时返回统一的 `LlmClient` 与原始配置，便于你根据业务做二次存储或埋点。
 
-#### B. React ChatBotify plugin
+#### B. React ChatBotify 插件
 
-Prefer the plugin when you are already building conversations with [React ChatBotify](https://react-chatbotify.com/).
+如果你正在使用 [React ChatBotify](https://react-chatbotify.com/) 搭建对话流程，可以继续通过插件方式接入。
 
-1. Import and register the plugin:
+1. 引入并注册插件：
    ```tsx
    import ChatBot from 'react-chatbotify';
    import LlmConnector from '@rcb-plugins/llm-connector';
@@ -89,14 +89,14 @@ Prefer the plugin when you are already building conversations with [React ChatBo
    );
    ```
 
-2. Configure an `llmConnector` block with your preferred provider:
+2. 在对话流程中指定 `llmConnector` 块：
    ```tsx
    import ChatBot from 'react-chatbotify';
    import LlmConnector, { LlmConnectorBlock, OpenaiProvider } from '@rcb-plugins/llm-connector';
 
    const flow = {
      start: {
-       message: 'Ask me anything about space!',
+       message: '欢迎来到太空知识问答！',
        transition: 0,
        path: 'talk_to_space',
      },
@@ -114,177 +114,33 @@ Prefer the plugin when you are already building conversations with [React ChatBo
    const MyBot = () => <ChatBot plugins={[LlmConnector()]} flow={flow} />;
    ```
 
-The full configuration guides for each provider live under [`docs/providers/`](docs/providers/).### Features
+完整的 Provider 配置指南请参见 [`docs/providers/`](docs/providers/)。
 
-**LLM Connector** is a lightweight plugin that provides the following features to your chatbot:
-- Simple & Fast LLM Integrations (via common [default providers](/docs/providers/))
-- Configure output behavior (e.g. stream responses by character/chunk or show full text at once)
-- Configure output speed
-- Configure size of message history to include
-- Configure default error messages if responses fail
-- Synchronized audio output (relies on core library audio configurations to read out LLM responses)
-- Built-in common providers for easy integrations (OpenAI, Gemini & WebLlm)
-- Ease of building your own providers for niche or custom use cases
+### 功能特性
 
-### API Documentation
+- 即插即用的 React 组件：用户输入密钥即可在浏览器直接调用模型
+- React ChatBotify 插件：支持流式输出、停止条件、语音播放等行为
+- 内置 Provider：OpenAI、Anthropic、Gemini、WebLLM（纯前端推理）
+- 提供统一的 `LlmClient`，方便构建自定义对话 UI
+- 支持字符/分段/整篇三种输出模式，自定义速率与历史窗口
+- 严格的 Provider 类型定义，便于扩展私有/第三方后端
 
-#### Plugin Configuration
+### API 文档
 
-The `LlmConnector` plugin accepts a configuration object that allows you to customize its behavior and appearance. An example configuration is passed in below to initialize the plugin:
+- [OpenAI Provider 配置说明](docs/providers/OpenAI.md)
+- [Anthropic Provider 配置说明](docs/providers/Anthropic.md)
+- [Gemini Provider 配置说明](docs/providers/Gemini.md)
+- [WebLLM Provider 配置说明](docs/providers/WebLlm.md)
+- [Wllama Provider（已归档）](docs/providers/Wllama.md)
 
-```javascript
-import ChatBot from "react-chatbotify";
-import LlmConnector from "@rcb-plugins/llm-connector";
-
-const MyComponent = () => {
-  const pluginConfig = {
-    // defaults to true, auto enable events required for plugin to work
-      autoConfig: true,
-  }
-
-  return (
-    <ChatBot plugins={[LlmConnector(pluginConfig)]}/>
-  )
-}
-```
-
-The base plugin configuration only allows a single field which is `autoConfig` (strongly recommended to keep this to `true`) which is described below:
-
-| Configuration Option         | Type     | Default Value                                                                                                                                                                                                                 | Description                                                                                                               |
-|------------------------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|
-| `autoConfig`                 | boolean  | `true`                                                                                                                                                                                                                        | Enables automatic configuration of required events. Recommended to keep as `true`. If set to `false`, you need to configure events manually. |
-
-#### LLM Connector Attribute
-
-The `llmConnector` attribute is added to the Block that you are keen to integrate LLM in. When you specify the `llmConnector` attribute, **all default attributes specified in the block are ignored**. This is because the `LlmConnector` plugin will take **full control over the block** to ensure a tight and smooth integration. With that said, the `llmConnector` attribute is an object that comes with its own properties as described below:
-
-| Property         | Type     | Default Value                                                                                                                                                                                                                 | Description                                                                                                               |
-|------------------------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|
-| `provider`                 | Provider | null                                                                                                                                                                                                                        | The LLM Provider to use in this block. |
-| `outputType`                 | string | `chunk`                                                                                                                                                                                                                        | Output type for the LLM response (`character`, `chunk` or `full`). If set to `character` or `chunk`, output will be streamed by character or chunk respectively. If set to `full`, then the output will be sent fully in one go. |
-| `outputSpeed`                | number | `30`                                                                                                                                                                                                                        | Output speed in milliseconds (applicable only if `outputType` is set to `character` or `chunk`). |
-| `historySize`                 | number | `0`                                                                                                                                                                                                                        | Default number of messages from chat history to include when sending messages to LLMs. |
-| `initialMessage`                 | string | ""                                                                                                                                                                                                                        | Initial message to send in the chat. |
-| `errorMessage`                 | string | `Unable to get response, please try again.`                                                                                                                                                                                                                        | Error message shown on failure to fetch a response. |
-| `stopConditions`                 | object | null                                                                                                                                                                                                                        | An object containing possible stop conditions to end an LLM conversation (more information on stopConditions [**here**](#ending-llm-conversations)). |
-
-#### LLM Providers
-
-As you may have seen from earlier examples, providers are passed into the `provider` property within the `llmConnector` attribute. Providers are essentially an abstraction over the various LLM providers such as OpenAI and Gemini. With that said, configurations for providers can vary greatly depending on the choice of provider. For the default providers, their configuration guides can be found here:
-
-- [**OpenAIProvider Configurations**](/docs/providers/OpenAI.md)
-- [**GeminiProvider Configurations**](/docs/providers/Gemini.md)
-- [**WebLlmProvider Configurations**](/docs/providers/WebLlm.md)
-
-> [!TIP]  
-> Note that if your choice of provider falls outside the default ones provided but has API specifications aligned to default providers (e.g. OpenAI), you may still use the default providers. 
-
-In addition, React ChatBotify's documentation website also contains live examples covering all of these default providers. You're strongly recommended to reference these examples:
-
-- [**OpenAI Provider Live Example**](https://react-chatbotify.com/docs/examples/openai_integration)
-- [**Gemini Provider Live Example**](https://react-chatbotify.com/docs/examples/gemini_integration)
-- [**WebLlm Live Example**](https://react-chatbotify.com/docs/examples/llm_conversation)
-
-Developers may also write custom providers to integrate with their own solutions by importing and implementing the `Provider` interface. The only method enforced by the interface is `sendMessage`, which returns an `AsyncGenerator<string>` for the `LlmConnector` plugin to consume. A minimal example of a custom provider is shown below:
-
-```javascript
-import ChatBot from "react-chatbotify";
-import { Provider } from "@rcb-plugins/llm-connector";
-
-class MyCustomProvider implements Provider {
-  /**
-   * Streams or batch-calls Openai and yields each chunk (or the full text).
-   *
-   * @param messages  messages to include in the request
-   * @param stream    if true, yields each token as it arrives; if false, yields one full response
-   */
-   public async *sendMessages(messages: Message[]): AsyncGenerator<string> {
-     // obviously we should do something with the messages (e.g. call a proxy) but this is just an example
-     yield "Hello World!";
-   }
-}
-```
-> [!TIP]  
-> Consider referencing the implementations for the default providers [here](/src/providers/) if you're looking to create your own provider.
-
-#### Ending LLM Conversations
-
-Within the `llmConnector` attribute, there is a `stopConditions` property that accepts an object containing several types of stop conditions which developers may tap on to end LLM conversations. In the example below, `llm_example_block` uses both `onUserMessage` stop condition to check if the user sent a "FINISH" message, ang the `onKeyDown` stop condition to check if the "Escape" key is pressed. If either conditions are satisfied, the user is sent to the `exit_block`:
-
-```javascript
-import ChatBot from "react-chatbotify";
-import LlmConnector, { LlmConnectorBlock, OpenaiProvider } from "@rcb-plugins/llm-connector";
-
-const MyComponent = () => {
-  const flow = {
-    start: {
-      message: "What would you like to find out today?",
-      transition: 0,
-      path: "llm_example_block",
-    },
-    llm_example_block: {
-      llmConnector: {
-        provider: new OpenaiProvider({
-          mode: 'direct',
-          model: 'gpt-4.1-nano',
-          responseFormat: 'stream',
-          apiKey: // openai api key here,
-        }),
-        stopConditions: {
-          onUserMessage: (message: Message) => {
-            if (
-              typeof message.content === 'string' &&
-              message.content.toUpperCase() === 'FINISH'
-            ) {
-              return 'start';
-            }
-          },
-          onKeyDown: (event: KeyboardEvent) => {
-            if (event.key === 'Escape') {
-              return 'start';
-            }
-            return null;
-          },
-        },
-      },
-    } as LlmConnectorBlock,
-    exit_block: {
-      message: "The LLM conversation has ended!",
-      chatDisabled: true,
-      options: ["Try Again"],
-      path: "llm_example_block",
-    }
-    // ... other blocks as necessary
-  };
-
-  return (
-    <ChatBot plugins={[LlmConnector()]}/>
-  )
-}
-```
-
-Currently, the plugin offers 2 stop conditions that is `onUserMessage` and `onKeyDown`:
-
-| Stop Condition         | Type     | Default Value                                                                                                                                                                                                                 | Description                                                                                                               |
-|------------------------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|
-| `onUserMessage`                 | async function | `null`                                                                                                                                                                                                                        | This stop condition is triggered whenever a new message is sent by the user within the `LlmConnectorBlock`. It takes in a `Message` parameter representing the message that was sent and returns a `string` representing a path to go to or `null`, if remaining within the block. |
-| `onKeyDown`                 | async function | `null`                                                                                                                                                                                                                        | This stop condition is triggered whenever a key down event is recorded (listens for keydown events). It takes in the `KeyBoardEvent` parameter and returns a `string` representing a path to go to or `null`, if remaining within the block. |
-
-Suggestions (or even better, pull requests) are welcomed for more stop conditions!
-
-### Team
+### 团队
 
 * [Tan Jin](https://github.com/tjtanjin)
 
-### Contributing
+### 贡献指南
 
-If you have code to contribute to the project, open a pull request from your fork and describe 
-clearly the changes and what they are intended to do (enhancement, bug fixes etc). Alternatively,
-you may simply raise bugs or suggestions by opening an issue.
+欢迎通过 Pull Request 提交改进或 Bug 修复，也可以直接在 Issues 中反馈需求和问题。提交 PR 时请简要说明变更的背景与目的，方便审核。
 
-### Others
+### 其它
 
-For any questions regarding the project, please reach out for support via **[discord](https://discord.gg/J6pA4v3AMW).**
-
-
-
+遇到任何问题，欢迎通过 [Discord 社区](https://discord.gg/J6pA4v3AMW) 与我们交流。

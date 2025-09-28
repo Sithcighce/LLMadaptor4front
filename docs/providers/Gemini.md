@@ -1,85 +1,79 @@
-# GeminiProvider Configuration Guide
+# GeminiProvider 配置指南
 
-The `GeminiProvider` lets you connect your chatbot to Google’s Gemini LLM, either **directly** via public API or through a **proxy**. Note that configurations can vary greatly between providers; this guide covers the available configurations for the `GeminiProvider`. You may find other providers' guides [here](../providers).
-
-> **ℹ️ Info:**  
-> This configuration guide assumes you have completed the setup for the `LlmConnector` plugin according to the guide [**here**](/README.md).
+`GeminiProvider` 用于连接 Google Gemini 系列模型，可以直连官方 API，也可以连接自建代理。本文列出所有可配置项，请先完成 [README](../../README.md) 中的基础集成步骤。
 
 ---
 
-## 1. Import Provider
+## 1. 引入 Provider
 
 ```ts
-import { GeminiProvider } from "@rcb-plugins/llm-connector";
+import { GeminiProvider } from '@rcb-plugins/llm-connector';
 ```
 
 ---
 
-## 2. Basic Instantiation
+## 2. 基础用法
 
-The `GeminiProvider` supports 2 modes ("direct" or "proxy"). Here’s a minimal example for "direct" mode:
+同样提供 `direct` 与 `proxy` 两种模式，下面是直连模式的示例：
 
 ```ts
 const gemini = new GeminiProvider({
-  mode: "direct",                     // "direct" or "proxy"
-  model: "gemini-1.5-flash",          // required
-  apiKey: process.env.GEMINI_API_KEY, // required in "direct" mode
-  responseFormat: "stream",           // "stream" (default) or "json"
+  mode: 'direct',                     // 'direct' 或 'proxy'
+  model: 'gemini-1.5-flash',          // 必填
+  apiKey: process.env.GEMINI_API_KEY, // 直连模式必填
+  responseFormat: 'stream',           // 'stream'（默认）或 'json'
 });
 ```
 
-> **⚠️ Warning:** You are **strongly discouraged** from using `mode: "direct"` in production, which risk exposing your API keys on the client side. The "direct" mode is meant to simplify testing, but is typically **unsafe** in production. You should instead be looking to use "proxy" mode with API key secured server-side. You may refer to this lightweight [**LLM proxy project**](https://github.com/tjtanjin/llm-proxy) if you would like a ready-to-go example.
+> **⚠️ 注意**：直连模式会在浏览器暴露 API Key，仅建议在测试环境使用。生产环境推荐 `proxy` 模式，密钥保存在后端。可以参考 [示例代理项目](https://github.com/tjtanjin/llm-proxy)。
 
 ---
 
-## 3. Configuration Options
+## 3. 配置项说明
 
-| Option           | Type                                               | Required              | Default                                            | Description                                                                |
-| ---------------- | -------------------------------------------------- | --------------------- | -------------------------------------------------- | -------------------------------------------------------------------------- |
-| `mode`           | `"direct"` \| `"proxy"`                            | ✅ always              | —                                                  | Selects direct or proxy mode.                                              |
-| `model`          | `string`                                           | ✅ always              | —                                                  | The Gemini model name to call (e.g. `gemini-2.0-flash-lite`). You can find the list of models [**here**](https://ai.google.dev/gemini-api/docs/models).                                             |
-| `apiKey`         | `string`                                           | ✅ if `mode: "direct"` | —                                                  | Your Google API key (only with `mode: "direct"`).                          |
-| `baseUrl`        | `string`                                           | ✅ if `mode: "proxy"`  | `https://generativelanguage.googleapis.com/v1beta` | Override the base URL for both modes (must be provided in proxy mode).     |
-| `method`         | `string`                                           | ❌                     | `"POST"`                                           | HTTP verb to call the endpoint.                                            |
-| `headers`        | `Record<string, string>`                           | ❌                     | `{}`                                               | Additional HTTP headers.                                                   |
-| `body`           | `Record<string, string>`                           | ❌                     | `{}`                                               | Additional HTTP body.                            |
-| `systemMessage`  | `string`                                           | ❌                     | `null`                                        | Prepends a system prompt to every conversation.                            |
-| `responseFormat` | `"stream"` \| `"json"`                             | ❌                     | `"stream"`                                         | Determines whether to use stream endpoint from the provider or fetch a full JSON output.          |
-| `messageParser`         | `(msgs: Message[]) => CustomMessage[]` | ❌        | `null`                                                                                                                 | Custom parser converting React ChatBotify [`Message[]`](https://react-chatbotify.com/docs/concepts/conversations#message) into desired message format for the provider.                               |
-| `debug`          | `boolean`                                      | ❌        | `false`     | Enables debug logging for the provider.                                                               |
+| 选项             | 类型                                   | 是否必填                    | 默认值                                             | 说明 |
+| ---------------- | -------------------------------------- | --------------------------- | -------------------------------------------------- | ---- |
+| `mode`           | `'direct'` \| `'proxy'`                | ✅ 总是必填                 | —                                                  | 选择直连还是代理 |
+| `model`          | `string`                               | ✅ 总是必填                 | —                                                  | Gemini 模型名称，可在 [官方列表](https://ai.google.dev/gemini-api/docs/models) 查阅 |
+| `apiKey`         | `string`                               | ✅ 仅在 `direct` 模式       | —                                                  | Google API Key（仅直连模式使用） |
+| `baseUrl`        | `string`                               | ✅ 仅在 `proxy` 模式        | `https://generativelanguage.googleapis.com/v1beta` | 自定义地址（代理模式必填，可覆盖默认值） |
+| `method`         | `string`                               | ❌                           | `'POST'`                                           | 请求方法 |
+| `headers`        | `Record<string, string>`               | ❌                           | `{}`                                               | 额外请求头 |
+| `body`           | `Record<string, unknown>`              | ❌                           | `{}`                                               | 额外请求体，最终会合并发送 |
+| `systemMessage`  | `string`                               | ❌                           | `undefined`                                        | 系统提示信息 |
+| `responseFormat` | `'stream'` \| `'json'`                 | ❌                           | `'stream'`                                         | `stream` 使用 SSE，`json` 等待完整响应 |
+| `messageParser`  | `(msgs: ChatMessage[]) => any[]`       | ❌                           | `undefined`                                        | 自定义消息转换逻辑 |
+| `debug`          | `boolean`                              | ❌                           | `false`                                            | 打印调试日志 |
 
 ---
 
-## 4. Advanced Example
+## 4. 进阶示例（代理模式）
 
 ```ts
 const gemini = new GeminiProvider({
-  mode: "proxy",
-  model: "gemini-1.5-flash",
-  baseUrl: "https://my-proxy.example.com/gemini",
-  method: "POST",
+  mode: 'proxy',
+  model: 'gemini-1.5-flash',
+  baseUrl: 'https://my-proxy.example.com/gemini',
   headers: {
-    "X-Custom-Header": "value",
+    'X-Team': 'alpha',
   },
   body: {
-    temperature: "0.7",
+    temperature: 0.6,
   },
-  systemMessage: "You are a helpful assistant that translates English to French.",
-  responseFormat: "stream",
-  messageParser: (msgs) => msgs.map((m) => ({ role: m.sender.toLowerCase(), content: String(m.content) })),
+  systemMessage: '请使用中文回答用户问题。',
+  responseFormat: 'stream',
+  messageParser: (msgs) => msgs.map((m) => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })),
+  debug: true,
 });
 ```
 
 ---
 
-## 5. How It Works Under the Hood
+## 5. 工作机制
 
-1. **Constructor**: sets defaults such as endpoint.
-2. **`sendMessages()`**:
-     * Fetches `endpoint` with JSON body.
-     * Streams via SSE if `responseFormat === "stream"`.
-     * Otherwise returns full text from JSON.
+1. **构造函数**：根据模式拼装请求地址和头部。
+2. **`sendMessages()`**：向 Gemini 发起请求，支持 SSE 流式解析或一次性 JSON 输出。
 
 ---
 
-*Check out other providers [here](../providers).*
+更多 Provider 说明请参见 [`docs/providers`](../providers)。

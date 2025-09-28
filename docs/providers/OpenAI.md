@@ -1,86 +1,81 @@
-# OpenAIProvider Configuration Guide
+# OpenAIProvider 配置指南
 
-The `OpenaiProvider` lets you connect your chatbot to OpenAI’s LLM, either **directly** via the public API or through a **proxy**. Note that configurations can vary greatly between providers; this guide covers the available configurations for the `OpenaiProvider`. You may find other providers’ guides [here](../providers).
-
-> **ℹ️ Info:**  
-> This configuration guide assumes you have completed the setup for the `LlmConnector` plugin according to the guide [**here**](/README.md).
+`OpenaiProvider` 支持直接连接 OpenAI 官方接口，也可以连接任何兼容 OpenAI 协议的代理。本文列出所有可用参数，帮助你快速完成配置。阅读本指南之前，请确保已经按照 [README](../../README.md) 中的说明完成 `LlmConnector` 的基础安装。
 
 ---
 
-## 1. Import Provider
+## 1. 引入 Provider
 
 ```ts
-import { OpenaiProvider } from "@rcb-plugins/llm-connector";
+import { OpenaiProvider } from '@rcb-plugins/llm-connector';
 ```
 
 ---
 
-## 2. Basic Instantiation
+## 2. 基础用法
 
-The `OpenaiProvider` supports two modes: "direct" or "proxy". Here’s a minimal example for "direct" mode:
+`OpenaiProvider` 支持两种模式：`direct`（浏览器直连）与 `proxy`（自定义后端代理）。下面示例展示直连模式的最小配置：
 
 ```ts
 const openai = new OpenaiProvider({
-  mode: "direct",                     // "direct" or "proxy"
-  model: "gpt-4",                     // required
-  apiKey: process.env.OPENAI_API_KEY, // required in "direct" mode
-  responseFormat: "stream",           // "stream" (default) or "json"
+  mode: 'direct',                     // 可选 'direct' 或 'proxy'
+  model: 'gpt-4.1-mini',              // 必填
+  apiKey: process.env.OPENAI_API_KEY, // 直连模式必填
+  responseFormat: 'stream',           // 'stream'（默认）或 'json'
 });
 ```
 
-> **⚠️ Warning:** You are **strongly discouraged** from using `mode: "direct"` in production, which risk exposing your API keys on the client side. The "direct" mode is meant to simplify testing, but is typically **unsafe** in production. You should instead be looking to use "proxy" mode with API key secured server-side. You may refer to this lightweight [**LLM proxy project**](https://github.com/tjtanjin/llm-proxy) if you would like a ready-to-go example.
+> **⚠️ 注意**：生产环境中不建议使用直连模式，API Key 将暴露在浏览器端。推荐使用 `proxy` 模式，由自己控制的后端保存密钥。可以参考轻量级的 [示例代理项目](https://github.com/tjtanjin/llm-proxy)。
 
 ---
 
-## 3. Configuration Options
+## 3. 配置项说明
 
-| Option           | Type                                               | Required              | Default                                      | Description                                                                                           |
-| ---------------- | -------------------------------------------------- | --------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `mode`           | `"direct"` \| `"proxy"`                            | ✅ always              | —                                            | Selects direct or proxy mode.                                                                         |
-| `model`          | `string`                                           | ✅ always              | —                                            | The OpenAI model to call.                                                                             |
-| `apiKey`         | `string`                                           | ✅ if `mode: "direct"` | —                                            | Your OpenAI API key (only with `mode: "direct"`).                                                     |
-| `baseUrl`        | `string`                                           | ✅ if `mode: "proxy"`  | `https://api.openai.com/v1/chat/completions` | Override the base URL (must be provided in proxy mode).                                               |
-| `method`         | `string`                                           | ❌                     | `"POST"`                                     | HTTP method for the request.                                                                          |
-| `headers`        | `Record<string, string>`                           | ❌                     | `{}`                                         | Additional HTTP headers.                                                                              |
-| `body`           | `Record<string, string>`                           | ❌                     | `{}`                                         | Additional HTTP body.                                                    |
-| `systemMessage`  | `string`                                           | ❌                     | `null`                                  | Prepends a system prompt to every conversation.                                                       |
-| `responseFormat` | `"stream"` \| `"json"`                             | ❌                     | `"stream"`                                   | Determines whether to use stream endpoint from the provider or fetch a full JSON output.                          |
-| `messageParser`         | `(msgs: Message[]) => CustomMessage[]` | ❌        | `null`                                                                                                                 | Custom parser converting React ChatBotify [`Message[]`](https://react-chatbotify.com/docs/concepts/conversations#message) into desired message format for the provider.                               |
-| `debug`          | `boolean`                                      | ❌        | `false`     | Enables debug logging for the provider.                                                               |
+| 选项             | 类型                                   | 是否必填                    | 默认值                                        | 说明 |
+| ---------------- | -------------------------------------- | --------------------------- | --------------------------------------------- | ---- |
+| `mode`           | `'direct'` \| `'proxy'`                | ✅ 总是必填                 | —                                             | 选择直连还是代理模式 |
+| `model`          | `string`                               | ✅ 总是必填                 | —                                             | 模型名称 |
+| `apiKey`         | `string`                               | ✅ 仅在 `direct` 模式       | —                                             | OpenAI API Key（仅直连模式使用） |
+| `baseUrl`        | `string`                               | ✅ 仅在 `proxy` 模式        | `https://api.openai.com/v1/chat/completions`   | 自定义接口地址（代理模式必填） |
+| `method`         | `string`                               | ❌                           | `'POST'`                                      | 请求方法 |
+| `headers`        | `Record<string, string>`               | ❌                           | `{}`                                          | 额外请求头 |
+| `body`           | `Record<string, unknown>`              | ❌                           | `{}`                                          | 额外请求体，最终会合并发送 |
+| `systemMessage`  | `string`                               | ❌                           | `undefined`                                   | 会作为系统提示信息插入到对话首位 |
+| `responseFormat` | `'stream'` \| `'json'`                 | ❌                           | `'stream'`                                    | `stream` 表示使用 SSE 流式返回，`json` 返回完整文本 |
+| `messageParser`  | `(msgs: ChatMessage[]) => any[]`       | ❌                           | `undefined`                                   | 自定义消息转换逻辑 |
+| `debug`          | `boolean`                              | ❌                           | `false`                                       | 打印请求与响应日志 |
 
 ---
 
-## 4. Advanced Example
+## 4. 进阶示例
 
 ```ts
 const openai = new OpenaiProvider({
-  mode: "proxy",
-  model: "gpt-4.1-nano",
-  baseUrl: "https://my-proxy.example.com/chat/completions",
-  method: "POST",
+  mode: 'proxy',
+  model: 'gpt-4.1-nano',
+  baseUrl: 'https://my-proxy.example.com/chat/completions',
+  method: 'POST',
   headers: {
-    "X-Custom-Header": "value",
+    'X-Custom-Header': 'value',
   },
   body: {
-    temperature: "0.7",
-    max_tokens: "500",
+    temperature: 0.7,
+    max_tokens: 500,
   },
-  systemMessage: "You are a helpful assistant that translates English to French.",
-  responseFormat: "stream",
-  messageParser: (msgs) => msgs.map((m) => ({ role: m.sender.toLowerCase(), content: String(m.content) })),
+  systemMessage: '你是一位专业的中英翻译助理。',
+  responseFormat: 'stream',
+  messageParser: (msgs) => msgs.map((m) => ({ role: m.role, content: m.content })),
+  debug: true,
 });
 ```
 
 ---
 
-## 5. How It Works Under the Hood
+## 5. 工作机制
 
-1. **Constructor**: sets defaults such as endpoint.
-2. **`sendMessages()`**:
-     * Fetches `endpoint` with JSON body.
-	   * Streams via SSE if `responseFormat === "stream"`.
-	   * Otherwise returns full text from JSON.
+1. **构造函数**：根据配置项初始化请求地址、请求头、请求体。
+2. **`sendMessages()`**：向 OpenAI 发起请求，`stream` 模式下逐块解析 SSE，`json` 模式返回一次性文本。
 
 ---
 
-*Check out other providers [here](../providers).*
+更多 Provider 说明请见 [`docs/providers`](../providers)。
