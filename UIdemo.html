@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>极简AI组件 - 纯UI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #111827; /* Dark background for context */
+        }
+        /* Custom styles for details/summary dropdown */
+        details > summary {
+            list-style: none;
+        }
+        details > summary::-webkit-details-marker {
+            display: none;
+        }
+        /* Hide scrollbar for the dropdown content */
+        .dropdown-content::-webkit-scrollbar {
+            display: none;
+        }
+        .dropdown-content {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+</head>
+<body class="text-white flex justify-center py-12">
+
+    <div class="w-full max-w-md mx-auto p-4 space-y-12">
+
+        <!-- =============================================================== -->
+        <!-- 中文版 (Chinese Version) -->
+        <!-- =============================================================== -->
+        <div>
+            <h1 class="text-3xl font-bold text-center mb-8 text-gray-200">中文版组件</h1>
+
+            <!-- 1. 模型选择器 -->
+            <div class="mb-8">
+                <h2 class="text-lg font-semibold mb-3 text-gray-400">1. 模型选择器</h2>
+                <div class="p-4 bg-gray-900 rounded-lg">
+                    <details class="relative group">
+                        <summary class="flex items-center cursor-pointer p-2 bg-gray-800 rounded-md hover:bg-gray-700 transition-colors">
+                            <div class="w-2 h-2 rounded-full bg-green-500 mr-3 flex-shrink-0" title="可用"></div>
+                            <span class="text-sm font-medium text-gray-200 flex-grow">GPT-4o</span>
+                            <svg class="w-4 h-4 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </summary>
+                        <div class="dropdown-content absolute top-full left-0 mt-2 w-full bg-gray-800 rounded-md shadow-lg z-10 border border-gray-700 max-h-60 overflow-y-auto">
+                            <ul class="p-1">
+                                <li class="text-sm text-gray-300 hover:bg-gray-700 rounded px-3 py-2 cursor-pointer flex justify-between items-center">GPT-4o <svg class="w-4 h-4 text-indigo-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg></li>
+                                <li class="text-sm text-gray-300 hover:bg-gray-700 rounded px-3 py-2 cursor-pointer">GPT-4 Turbo</li>
+                                <li class="text-sm text-gray-300 hover:bg-gray-700 rounded px-3 py-2 cursor-pointer">Claude 3 Opus</li>
+                                <li class="text-sm text-gray-400 px-3 pt-2 pb-1 font-semibold border-t border-gray-700 mt-1">旧模型</li>
+                                <li class="text-sm text-gray-300 hover:bg-gray-700 rounded px-3 py-2 cursor-pointer">GPT-3.5 Turbo</li>
+                            </ul>
+                        </div>
+                    </details>
+                </div>
+            </div>
+
+            <!-- 2. 连接设置 -->
+            <div class="mb-8">
+                 <h2 class="text-lg font-semibold mb-3 text-gray-400">2. 连接设置</h2>
+                 <div class="p-4 bg-gray-900 rounded-lg space-y-4">
+                    <div class="flex items-center justify-between text-sm px-1">
+                        <span class="text-gray-400">状态</span>
+                        <div class="flex items-center">
+                             <div class="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
+                             <span class="text-gray-300">已连接</span>
+                        </div>
+                    </div>
+                     <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1 px-1">服务商</label>
+                        <select class="w-full py-2 px-3 rounded-md text-sm bg-gray-800 border border-gray-700 text-white focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option>OpenAI</option>
+                            <option>Anthropic</option>
+                            <option>自定义</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1 px-1">API Key</label>
+                        <input type="password" placeholder="sk-..." class="w-full py-2 px-3 rounded-md text-sm bg-gray-800 border border-gray-700 text-white focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div class="mt-2 flex">
+                         <button type="button" class="w-full text-sm text-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md transition-colors">连接</button>
+                         <!-- <button type="button" class="w-full text-sm text-center bg-gray-700 hover:bg-gray-600 text-gray-300 font-semibold py-2 px-4 rounded-md transition-colors">断开</button> -->
+                    </div>
+                 </div>
+            </div>
+
+            <!-- 3. Token 使用情况 -->
+            <div class="mb-8">
+                <h2 class="text-lg font-semibold mb-3 text-gray-400">3. Token 使用情况</h2>
+                <div class="p-4 bg-gray-900 rounded-lg flex justify-around text-center">
+                    <div>
+                        <div class="text-xs text-gray-400 mb-1">输入</div>
+                        <div class="text-lg font-semibold text-gray-200">1,204</div>
+                    </div>
+                    <div class="border-l border-gray-700"></div>
+                    <div>
+                        <div class="text-xs text-gray-400 mb-1">输出</div>
+                        <div class="text-lg font-semibold text-gray-200">856</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="border-t border-gray-700 my-12"></div>
+
+        <!-- =============================================================== -->
+        <!-- 英文版 (English Version) -->
+        <!-- =============================================================== -->
+        <div>
+            <h1 class="text-3xl font-bold text-center mb-8 text-gray-200">English Version Components</h1>
+
+            <!-- 1. Model Selector -->
+            <div class="mb-8">
+                <h2 class="text-lg font-semibold mb-3 text-gray-400">1. Model Selector</h2>
+                <div class="p-4 bg-gray-900 rounded-lg">
+                    <details class="relative group">
+                        <summary class="flex items-center cursor-pointer p-2 bg-gray-800 rounded-md hover:bg-gray-700 transition-colors">
+                            <div class="w-2 h-2 rounded-full bg-green-500 mr-3 flex-shrink-0" title="Available"></div>
+                            <span class="text-sm font-medium text-gray-200 flex-grow">GPT-4o</span>
+                            <svg class="w-4 h-4 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </summary>
+                        <div class="dropdown-content absolute top-full left-0 mt-2 w-full bg-gray-800 rounded-md shadow-lg z-10 border border-gray-700 max-h-60 overflow-y-auto">
+                            <ul class="p-1">
+                                <li class="text-sm text-gray-300 hover:bg-gray-700 rounded px-3 py-2 cursor-pointer flex justify-between items-center">GPT-4o <svg class="w-4 h-4 text-indigo-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg></li>
+                                <li class="text-sm text-gray-300 hover:bg-gray-700 rounded px-3 py-2 cursor-pointer">GPT-4 Turbo</li>
+                                <li class="text-sm text-gray-300 hover:bg-gray-700 rounded px-3 py-2 cursor-pointer">Claude 3 Opus</li>
+                                <li class="text-sm text-gray-400 px-3 pt-2 pb-1 font-semibold border-t border-gray-700 mt-1">Legacy Models</li>
+                                <li class="text-sm text-gray-300 hover:bg-gray-700 rounded px-3 py-2 cursor-pointer">GPT-3.5 Turbo</li>
+                            </ul>
+                        </div>
+                    </details>
+                </div>
+            </div>
+
+            <!-- 2. Connection Settings -->
+            <div class="mb-8">
+                 <h2 class="text-lg font-semibold mb-3 text-gray-400">2. Connection Settings</h2>
+                 <div class="p-4 bg-gray-900 rounded-lg space-y-4">
+                    <div class="flex items-center justify-between text-sm px-1">
+                        <span class="text-gray-400">Status</span>
+                        <div class="flex items-center">
+                             <div class="w-2 h-2 rounded-full bg-gray-500 mr-2"></div>
+                             <span class="text-gray-300">Not Connected</span>
+                        </div>
+                    </div>
+                     <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1 px-1">Provider</label>
+                        <select class="w-full py-2 px-3 rounded-md text-sm bg-gray-800 border border-gray-700 text-white focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option>OpenAI</option>
+                            <option>Anthropic</option>
+                            <option>Custom</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1 px-1">API Key</label>
+                        <input type="password" placeholder="sk-..." class="w-full py-2 px-3 rounded-md text-sm bg-gray-800 border border-gray-700 text-white focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div class="mt-2 flex">
+                         <button type="button" class="w-full text-sm text-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md transition-colors">Connect</button>
+                         <!-- <button type="button" class="w-full text-sm text-center bg-gray-700 hover:bg-gray-600 text-gray-300 font-semibold py-2 px-4 rounded-md transition-colors">Disconnect</button> -->
+                    </div>
+                 </div>
+            </div>
+
+            <!-- 3. Token Usage -->
+            <div class="mb-8">
+                <h2 class="text-lg font-semibold mb-3 text-gray-400">3. Token Usage</h2>
+                <div class="p-4 bg-gray-900 rounded-lg flex justify-around text-center">
+                    <div>
+                        <div class="text-xs text-gray-400 mb-1">Input</div>
+                        <div class="text-lg font-semibold text-gray-200">1,204</div>
+                    </div>
+                    <div class="border-l border-gray-700"></div>
+                    <div>
+                        <div class="text-xs text-gray-400 mb-1">Output</div>
+                        <div class="text-lg font-semibold text-gray-200">856</div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</body>
+</html>

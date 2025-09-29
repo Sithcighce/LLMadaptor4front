@@ -1,45 +1,46 @@
-// plugin import
-import LlmConnectorPlugin from './factory/RcbPluginFactory';
+// --- Main Provider & Context Hook --- //
+import { LlmConnectorProvider, useLlmConnector } from './providers/LlmConnectorProvider';
 
-// react component import
-import LlmConnector from './components/LlmConnector/LlmConnector';
+// --- UI Components --- //
+import { ConnectionFormEn } from './components/ConnectionForm/index.en';
+import { ConnectionFormZh } from './components/ConnectionForm/index.zh';
+import { ModelSelectEn } from './components/ModelSelect/index.en';
+import { ModelSelectZh } from './components/ModelSelect/index.zh';
+import { TokenUsageEn } from './components/TokenUsage/index.en';
+import { TokenUsageZh } from './components/TokenUsage/index.zh';
 
-// provider imports
-import AnthropicProvider from './providers/AnthropicProvider';
-import GeminiProvider from './providers/GeminiProvider';
-import OpenaiProvider from './providers/OpenaiProvider';
-import WebLlmProvider from './providers/WebLlmProvider';
+// --- Logic Hook for Advanced Usage --- //
+import { useLlmConnectorLogic } from './hooks/useLlmConnectorLogic';
 
-// client utilities
-import { createLlmClient } from './client/createLlmClient';
-
-// type imports
-import type { ProviderContext } from './components/LlmConnector/LlmConnector';
-import type { LlmConnectorBlock } from './types/LlmConnectorBlock';
-import type { PluginConfig } from './types/PluginConfig';
-import type { Provider } from './types/Provider';
+// --- Client & Types --- //
+import { LlmClient } from './client/LlmClient';
 import type { ChatMessage } from './types/ChatMessage';
-import type { ChatRequest, ChatResult, StreamChatResult, TextChatResult, LlmClient } from './client/types';
+import type { ChatRequest, ChatResult, StreamingChatResult, StreamChunk } from './types';
 
-// default provider exports
-export { AnthropicProvider, GeminiProvider, OpenaiProvider, WebLlmProvider };
+// --- Export all public-facing parts --- //
+export {
+  // Provider & Hooks
+  LlmConnectorProvider,
+  useLlmConnector,
+  useLlmConnectorLogic,
 
-// component & client exports
-export { LlmConnector, createLlmClient };
+  // UI Components
+  ConnectionFormEn,
+  ConnectionFormZh,
+  ModelSelectEn,
+  ModelSelectZh,
+  TokenUsageEn,
+  TokenUsageZh,
 
-// type exports
-export type {
-	ProviderContext,
-	LlmConnectorBlock,
-	PluginConfig,
-	Provider,
-	ChatMessage,
-	ChatRequest,
-	ChatResult,
-	StreamChatResult,
-	TextChatResult,
-	LlmClient,
+  // Client
+  LlmClient,
 };
 
-// plugin export
-export default LlmConnectorPlugin;
+// --- Export all public types --- //
+export type {
+  ChatMessage,
+  ChatRequest,
+  ChatResult,
+  StreamingChatResult,
+  StreamChunk,
+};

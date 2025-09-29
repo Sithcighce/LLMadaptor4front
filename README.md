@@ -9,138 +9,159 @@
   <a href="https://www.npmjs.com/package/@rcb-plugins/llm-connector"> <img src="https://img.shields.io/badge/react-16--19-orange?logo=react&label=react" /> </a>
 </p>
 
-## 目录
+## 简介
 
-* [简介](#简介)
-* [快速开始](#快速开始)
-* [功能特性](#功能特性)
-* [API 文档](#api-文档)
-* [团队](#团队)
-* [贡献指南](#贡献指南)
-* [其它](#其它)
+`LLM Connector` is a React library designed to solve the "bring your own API key" problem in front-end applications. It provides a powerful logic core and a set of beautiful, independent UI components to let your users connect to hundreds of LLM providers securely and easily, without needing a backend.
 
-### 简介
+## The Problem
 
-<p align="center">
-  <img height="400px" src="https://github.com/user-attachments/assets/72813239-7bb7-4966-a1b9-0ae1d0f7c6d0" />
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <img height="400px" src="https://github.com/user-attachments/assets/c78f88f9-bbb7-4bad-91a8-13633ce35d4a" />
-</p>
+In the world of AI applications, developers face a dilemma. End-users often have their own API keys from various sources:
+- Official providers like OpenAI and Anthropic.
+- Third-party proxy services that are cheaper or offer special models.
+- Self-hosted models with custom URLs.
 
-**LLM Connector** 同时提供两种形态：一个用于纯前端应用的 React 即插即用组件，以及一个面向 React ChatBotify 的聊天插件。项目内置四种常用适配器 —— [**OpenAI**](docs/providers/OpenAI.md)、[**Anthropic**](docs/providers/Anthropic.md)、[**Gemini**](docs/providers/Gemini.md) 与 [**WebLlm（浏览器推理）**](docs/providers/WebLlm.md)。开发者也可以根据需要扩展自定义 Provider，而公共核心负责流式输出、消息历史管理、音频播报和统一的错误处理。
+Forcing users to re-configure these keys in every new app is tedious. Building a UI for this is repetitive for developers. Most existing solutions (like Vercel AI SDK) require a backend to manage keys, which doesn't fit the "user-provided key" model.
 
-如果需要帮助，可以加入插件社区的 [**Discord**](https://discord.gg/J6pA4v3AMW)。
+## Our Solution
 
-### 快速开始
+`LLM Connector` solves this by providing a **purely front-end** solution with two primary ways to use it:
 
-安装 npm 包：
+1.  **The Plug-and-Play Components**: A set of pre-built, independent React components for model selection, connection settings, and token usage display.
+2.  **The Logic Core**: A powerful set of React Hooks that handle all the state management, configuration persistence, and client creation, allowing you to build a completely custom UI.
 
+At its heart, `LLM Connector` uses [Token.js](https://github.com/token-js/token.js) as its engine, enabling it to connect to over 200 LLM providers directly from the browser.
+
+## Quick Start
+
+Install the library:
 ```bash
 npm install @rcb-plugins/llm-connector
 ```
 
-#### A. React 组件（纯前端方案）
+### Option 1: The Plug-and-Play Way
 
-当你希望用户“自带 API Key”，并在浏览器中直接调用模型时，使用 `LlmConnector` 组件。
+This is the easiest way to get started. Wrap your application with `LlmConnectorProvider`, then place the independent UI components anywhere you like. They will work together automatically.
 
 ```tsx
-import { useState } from 'react';
-import { LlmConnector, type LlmClient } from '@rcb-plugins/llm-connector';
+import React from 'react';
+import {
+  LlmConnectorProvider,
+  ConnectionFormEn,
+  ModelSelectEn,
+  TokenUsageEn,
+  useLlmConnector
+} from '@rcb-plugins/llm-connector';
 
-const MyTool = () => {
-  const [client, setClient] = useState<LlmClient | null>(null);
+// A component to test the chat functionality
+const ChatButton = () => {
+  const { llmClient } = useLlmConnector();
+
+  if (!llmClient) return null;
 
   return (
-    <>
-      <LlmConnector
-        onReady={(readyClient, context) => {
-          console.log('已连接的服务商', context.providerId, context.rawConfig.model);
-          setClient(readyClient);
-        }}
-      />
-
-      <button
-        onClick={async () => {
-          if (!client) return;
-          await client.chat({ messages: [{ role: 'user', content: '你好！' }] });
-        }}
-      >
-        发送测试请求
-      </button>
-    </>
+    <button onClick={async () => {
+      const result = await llmClient.chat({ messages: [{ role: 'user', content: 'Hello!' }] });
+      alert(result.text);
+    }}>
+      Say Hello
+    </button>
   );
-};
+}
+
+// Your main application
+function App() {
+  return (
+    <LlmConnectorProvider>
+      <header>
+        <h2>My App</h2>
+        <ModelSelectEn />
+      </header>
+      <main>
+        <p>Main content of my application...</p>
+        <ChatButton />
+      </main>
+      <aside>
+        <ConnectionFormEn />
+        <TokenUsageEn />
+      </aside>
+    </LlmConnectorProvider>
+  );
+}
 ```
 
-- 组件会将配置安全地持久化到 `localStorage`，不会上传 API Key。
-- `onReady` 同时返回统一的 `LlmClient` 与原始配置，便于你根据业务做二次存储或埋点。
+### Option 2: The Custom UI Way
 
-#### B. React ChatBotify 插件
+If you want to build your own UI from scratch, you can use the `useLlmConnector` hook, which provides all the states and handlers you need.
 
-如果你正在使用 [React ChatBotify](https://react-chatbotify.com/) 搭建对话流程，可以继续通过插件方式接入。
+```tsx
+import React from 'react';
+import { LlmConnectorProvider, useLlmConnector } from '@rcb-plugins/llm-connector';
 
-1. 引入并注册插件：
-   ```tsx
-   import ChatBot from 'react-chatbotify';
-   import LlmConnector from '@rcb-plugins/llm-connector';
+const MyCustomConnectorUI = () => {
+  const { states, handlers, llmClient } = useLlmConnector();
 
-   const MyBot = () => (
-     <ChatBot plugins={[LlmConnector()]} />
-   );
-   ```
+  return (
+    <div>
+      <p>Status: {states.status}</p>
+      <input
+        type="password"
+        placeholder="Enter your API Key"
+        value={states.apiKey}
+        onChange={(e) => handlers.setApiKey(e.target.value)}
+        disabled={states.status === 'connected'}
+      />
+      <button onClick={handlers.handleConnect} disabled={states.status !== 'disconnected'}>
+        Connect
+      </button>
+      {llmClient && <p>Connected!</p>}
+    </div>
+  );
+}
 
-2. 在对话流程中指定 `llmConnector` 块：
-   ```tsx
-   import ChatBot from 'react-chatbotify';
-   import LlmConnector, { LlmConnectorBlock, OpenaiProvider } from '@rcb-plugins/llm-connector';
+function App() {
+  return (
+    <LlmConnectorProvider>
+      <MyCustomConnectorUI />
+    </LlmConnectorProvider>
+  );
+}
+```
 
-   const flow = {
-     start: {
-       message: '欢迎来到太空知识问答！',
-       transition: 0,
-       path: 'talk_to_space',
-     },
-     talk_to_space: {
-       llmConnector: {
-         provider: new OpenaiProvider({
-           mode: 'direct',
-           model: 'gpt-4.1-mini',
-           apiKey: process.env.OPENAI_API_KEY!,
-         }),
-       },
-     } as LlmConnectorBlock,
-   };
+## API Reference
 
-   const MyBot = () => <ChatBot plugins={[LlmConnector()]} flow={flow} />;
-   ```
+### Providers
 
-完整的 Provider 配置指南请参见 [`docs/providers/`](docs/providers/)。
+-   **`<LlmConnectorProvider>`**: The root provider component that must wrap your application.
 
-### 功能特性
+### Hooks
 
-- 即插即用的 React 组件：用户输入密钥即可在浏览器直接调用模型
-- React ChatBotify 插件：支持流式输出、停止条件、语音播放等行为
-- 内置 Provider：OpenAI、Anthropic、Gemini、WebLLM（纯前端推理）
-- 提供统一的 `LlmClient`，方便构建自定义对话 UI
-- 支持字符/分段/整篇三种输出模式，自定义速率与历史窗口
-- 严格的 Provider 类型定义，便于扩展私有/第三方后端
+-   **`useLlmConnector()`**: The primary hook to access the connector's state and handlers from within the `LlmConnectorProvider`.
+-   **`useLlmConnectorLogic()`**: The core logic hook. Use this only if you need to manage the logic outside of the provided context.
 
-### API 文档
+### UI Components
 
-- [OpenAI Provider 配置说明](docs/providers/OpenAI.md)
-- [Anthropic Provider 配置说明](docs/providers/Anthropic.md)
-- [Gemini Provider 配置说明](docs/providers/Gemini.md)
-- [WebLLM Provider 配置说明](docs/providers/WebLlm.md)
-- [Wllama Provider（已归档）](docs/providers/Wllama.md)
+Each component comes in an English (`...En`) and Chinese (`...Zh`) version. They accept `className` and `locale` props for customization.
 
-### 团队
+-   **`<ConnectionFormEn />` / `<ConnectionFormZh />`**: A form for setting the provider, API key, and base URL.
+-   **`<ModelSelectEn />` / `<ModelSelectZh />`**: A dropdown for selecting the model.
+-   **`<TokenUsageEn />` / `<TokenUsageZh />`**: A display for input and output token usage.
 
-* [Tan Jin](https://github.com/tjtanjin)
+### Main Client
 
-### 贡献指南
+-   **`LlmClient`**: The standardized client object returned by the hook after a successful connection. Its main method is `chat(request)`.
 
-欢迎通过 Pull Request 提交改进或 Bug 修复，也可以直接在 Issues 中反馈需求和问题。提交 PR 时请简要说明变更的背景与目的，方便审核。
+## Known Issues
 
-### 其它
+### UI Alignment with Demo
+- **Issue**: Default UI components do not perfectly match the UIdemo.html styling and layout
+- **Status**: ⚠️ Pending resolution
+- **Details**: The current React components should be aligned with the static UIdemo.html design for consistent visual appearance
+- **Impact**: Visual inconsistencies between demo and actual component rendering
 
-遇到任何问题，欢迎通过 [Discord 社区](https://discord.gg/J6pA4v3AMW) 与我们交流。
+## Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request.
+
+## License
+
+This project is licensed under the MIT License.
