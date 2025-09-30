@@ -131,7 +131,17 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ className, locale: localeOver
     model, modelOptions, apiKey, status,
     setModel, fetchModels
   } = useConnectionManager();
+  
+  // 🔥 关键修复：使用本地状态管理选择，延迟提交到全局状态
+  const [selectedModel, setSelectedModel] = useState(model); // 本地选择状态
   const [isOpen, setIsOpen] = useState(false);
+  
+  // 当全局模型变化时，同步到本地状态（比如连接后设置默认模型）
+  useEffect(() => {
+    if (model && model !== selectedModel) {
+      setSelectedModel(model);
+    }
+  }, [model]);
 
   // 监听连接状态变化，确保组件及时更新
   useEffect(() => {
@@ -155,10 +165,16 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ className, locale: localeOver
       return;
     }
     
-    // 如果没有模型列表，尝试获取
-    if (modelOptions.length === 0) {
+    // 如果要打开下拉且没有模型列表，尝试获取
+    if (!isOpen && modelOptions.length === 0) {
       console.log('Triggering fetchModels from ModelSelect');
       fetchModels();
+    }
+    
+    // 如果要关闭下拉，且本地选择与全局不同，则提交更改
+    if (isOpen && selectedModel !== model) {
+      console.log('Committing model change:', { from: model, to: selectedModel });
+      setModel(selectedModel); // 🔥 延迟提交：关闭时才提交到全局状态
     }
     
     setIsOpen((prev) => !prev);
@@ -169,8 +185,9 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ className, locale: localeOver
     if (status !== 'connected') {
       return;
     }
-    setModel(modelName);
-    setIsOpen(false);
+    // 🔥 关键修复：只更新本地状态，不立即提交到全局
+    setSelectedModel(modelName);
+    // 注意：不关闭下拉，让用户可以继续选择或点击外部关闭
   };
 
   // 简化逻辑：只要连接成功就可用
@@ -178,21 +195,16 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ className, locale: localeOver
   const hasModels = modelOptions.length > 0;
   const isAvailable = isConnected; // 连接成功就可用，不管模型列表
   
-  // 调试日志
-  console.log('ModelSelect Debug:', {
-    status,
-    isConnected,
-    modelOptions: modelOptions.length,
-    hasModels,
-    isAvailable,
-    model
-  });
+  // 状态计算完成，准备渲染
   
   const getDisplayText = () => {
     if (status === 'connecting') return '连接中...';
     if (!isConnected) return '请先连接';
     if (isConnected && !hasModels) return '加载模型中...'; // 连接成功但模型还没加载完
-    return model || locale.placeholder;
+    // 🔥 显示本地选择的模型，如果与全局不同则加上 * 标记
+    const displayModel = selectedModel || model || locale.placeholder;
+    const hasUnsavedChanges = selectedModel && selectedModel !== model;
+    return hasUnsavedChanges ? `${displayModel} *` : displayModel;
   };
   
   const displayText = getDisplayText();
@@ -226,7 +238,7 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ className, locale: localeOver
 
 
 
-      
+
       <div style={styles.card}>
         <details style={styles.details} open={isOpen} onToggle={(e) => {
           e.preventDefault();
@@ -313,7 +325,8 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ className, locale: localeOver
                       key={modelName} 
                       style={{
                         ...styles.dropdownItem,
-                        ...(model === modelName ? styles.dropdownItemSelected : {})
+                        // 🔥 基于本地选择状态来显示选中状态
+                        ...(selectedModel === modelName ? styles.dropdownItemSelected : {})
                       }}
                       onClick={() => handleSelect(modelName)}
                       onMouseOver={(e) => {
@@ -324,8 +337,12 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ className, locale: localeOver
                       }}
                     >
                       {modelName}
-                      {model === modelName && (
-                        <svg style={styles.checkIcon} fill="currentColor" viewBox="0 0 20 20">
+                      {/* 显示两种状态：本地选中 (蓝色勾) 和全局生效 (绿色勾) */}
+                      {selectedModel === modelName && (
+                        <svg style={{
+                          ...styles.checkIcon,
+                          color: selectedModel === model ? '#10B981' : '#818CF8' // 已生效：绿色，待提交：蓝色
+                        }} fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
                         </svg>
                       )}

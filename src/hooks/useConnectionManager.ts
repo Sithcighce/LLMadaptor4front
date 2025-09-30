@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useLlmConnector } from './useLlmConnector';
 
 /**
@@ -27,7 +28,8 @@ export const useConnectionManager = () => {
   // 🔥 修复：使用 Context 中的共享状态，而不是创建新实例
   const { states, handlers } = useLlmConnector();
 
-  return {
+  // 🔥 关键修复：用 useMemo 稳定返回对象的引用
+  return useMemo(() => ({
     // 🔧 连接配置状态
     providerId: states.providerId,
     apiKey: states.apiKey,
@@ -55,7 +57,13 @@ export const useConnectionManager = () => {
     
     // 📈 使用量管理
     setTokenUsage: handlers.setTokenUsage,
-  };
+  }), [
+    // 只有这些值真正变化时才重新创建对象
+    states.providerId, states.apiKey, states.baseUrl, states.model,
+    states.status, states.error, states.modelOptions, states.tokenUsage,
+    handlers.setProviderId, handlers.setApiKey, handlers.setBaseUrl, handlers.setModel,
+    handlers.handleConnect, handlers.handleDisconnect, handlers.fetchModels, handlers.setTokenUsage
+  ]);
 };
 
 /**

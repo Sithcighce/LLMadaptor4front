@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { TokenJS } from 'token.js/dist/index.cjs';
 import { LlmClient } from '../client/LlmClient';
 import type { ProviderId, ConnectorStatus, TokenUsage } from '../types/index';
@@ -160,11 +160,6 @@ export const useLlmConnectorLogic = () => {
 
       setModelOptions(models);
       
-      // 如果当前模型不在列表中，设置第一个模型为默认
-      if (models.length > 0 && !models.includes(model)) {
-        setModel(models[0]);
-      }
-      
       console.log('fetchModels success:', { 
         providerId, 
         modelsCount: models.length, 
@@ -179,7 +174,32 @@ export const useLlmConnectorLogic = () => {
       setModelOptions([]);
       throw error; // 重新抛出错误给 handleConnect
     }
-  }, [apiKey, providerId, model, baseUrl, setModel]);
+  }, [apiKey, providerId, baseUrl]); // 移除 model 和 setModel 依赖以避免循环
+
+  // --- 默认模型设置逻辑 ---
+  useEffect(() => {
+    // 当模型列表变化且当前模型不在列表中时，设置第一个模型为默认
+    if (modelOptions.length > 0 && !modelOptions.includes(model)) {
+      console.log('Setting default model:', { currentModel: model, newModel: modelOptions[0] });
+      setModel(modelOptions[0]);
+    }
+  }, [modelOptions, model, setModel]);
+
+  // --- 模型变化时重新创建 Client ---
+  // 🚫 暂时注释：这个 useEffect 导致无限循环，因为 setLlmClient 会触发整个状态树重建
+  // useEffect(() => {
+  //   // 当模型变化且已连接时，重新创建 client 以确保使用正确的模型
+  //   if (status === 'connected' && model && apiKey && providerId) {
+  //     console.log('Model changed, recreating client:', { model, providerId });
+  //     const config = {
+  //       apiKey,
+  //       baseURL: baseUrl || undefined,
+  //     };
+  //     const tokenJsClient = new TokenJS(config);
+  //     const newClient = new LlmClient(tokenJsClient, providerId, model);
+  //     setLlmClient(newClient);
+  //   }
+  // }, [model, status, apiKey, providerId, baseUrl]);
 
   // --- Handlers ---
   const handleConnect = useCallback(async () => {
@@ -232,7 +252,8 @@ export const useLlmConnectorLogic = () => {
     setModelOptions([]); // Clear model list on disconnect
   }, []);
 
-  const states = {
+  // 🔥 核心修复：用 useMemo 稳定所有返回对象的引用，避免无限重渲染
+  const states = useMemo(() => ({
     providerId,
     apiKey,
     baseUrl,
@@ -242,7 +263,7 @@ export const useLlmConnectorLogic = () => {
     modelOptions,
     tokenUsage,
     llmClient,
-  };
+  }), [providerId, apiKey, baseUrl, model, status, error, modelOptions, tokenUsage, llmClient]);
 
   // --- 不自动获取模型，由用户手动触发或在连接时获取 ---
   // useEffect(() => {
@@ -251,7 +272,7 @@ export const useLlmConnectorLogic = () => {
   //   }
   // }, [fetchModels]);
 
-  const handlers = {
+  const handlers = useMemo(() => ({
     setProviderId,
     setApiKey,
     setBaseUrl,
@@ -260,11 +281,11 @@ export const useLlmConnectorLogic = () => {
     handleDisconnect,
     fetchModels,
     setTokenUsage, // Will be used by the LlmClient wrapper later
-  };
+  }), [setProviderId, setApiKey, setBaseUrl, setModel, handleConnect, handleDisconnect, fetchModels, setTokenUsage]);
 
-  return { 
+  return useMemo(() => ({ 
     states, 
     handlers, 
     llmClient // 🎯 核心暴露点：所有功能都基于这个 client 实例
-  };
+  }), [states, handlers, llmClient]);
 };
