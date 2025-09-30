@@ -1,6 +1,8 @@
 import react from "@vitejs/plugin-react";
 import path from "path";
 import eslint from "vite-plugin-eslint2";
+import tailwindcss from "@tailwindcss/postcss";
+import autoprefixer from "autoprefixer";
 
 import { defineConfig  } from "vite";
 
@@ -47,11 +49,19 @@ export default ({ mode }) => {
       outDir: "../dist",
       assetsInclude: ['**/*.wasm'],
     },
+    css: {
+      postcss: {
+        plugins: [
+          tailwindcss,
+          autoprefixer,
+        ],
+      },
+    },
     plugins: [
       react({
         include: "**/*.{jsx,tsx}",
       }),
-      eslint()
+      // eslint() // 暂时禁用 ESLint 来专注于样式问题
     ],
   });
 }

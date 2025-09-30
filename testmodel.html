@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多平台 LLM 测试工具</title>
+    <!-- 引入 Tailwind CSS 以便快速构建美观的界面 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 自定义加载动画样式 */
+        .loader {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 聊天气泡样式 */
+        .chat-bubble {
+            max-width: 90%;
+            padding: 10px 15px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+            word-wrap: break-word;
+        }
+        .user-bubble {
+            background-color: #3b82f6; /* blue-500 */
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+        .assistant-bubble {
+            background-color: #e5e7eb; /* gray-200 */
+            color: #1f2937; /* gray-800 */
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+        .dark .assistant-bubble {
+            background-color: #374151; /* dark:gray-700 */
+            color: #f3f4f6; /* dark:gray-100 */
+        }
+        .thinking-bubble {
+            font-style: italic;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 flex items-center justify-center min-h-screen font-sans">
+
+    <div class="w-full max-w-5xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 md:p-8 flex flex-col md:flex-row gap-8">
+        
+        <!-- 左侧：API 输入和模型列表 -->
+        <div class="w-full md:w-1/2 flex flex-col">
+            <div class="mb-6 text-center">
+                <h1 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">多平台 LLM 测试工具</h1>
+            </div>
+            
+            <!-- API Provider 选择 -->
+            <div class="mb-4">
+                <label for="apiProvider" class="block text-sm font-medium text-gray-700 dark:text-gray-300">选择 API 供应商:</label>
+                <select id="apiProvider" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                    <option value="openai">OpenAI</option>
+                    <option value="anthropic">Anthropic</option>
+                    <option value="gemini">Google Gemini</option>
+                    <option value="kimi">Kimi (Moonshot)</option>
+                    <option value="deepseek">DeepSeek</option>
+                </select>
+            </div>
+
+            <!-- API 密钥输入区域 -->
+            <div class="flex flex-col sm:flex-row gap-3 mb-4">
+                <input type="password" id="apiKey" placeholder="输入您的 OpenAI API 密钥 (sk-...)" class="flex-grow w-full px-4 py-2 text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
+                <button id="fetchButton" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-200 flex items-center justify-center">
+                    <span id="buttonText">获取模型</span>
+                    <div id="loader" class="loader hidden ml-2"></div>
+                </button>
+            </div>
+
+            <!-- 错误信息提示 -->
+            <div id="errorMessage" class="hidden text-red-500 bg-red-100 dark:bg-red-900 dark:text-red-300 p-3 rounded-lg mb-4 text-center"></div>
+
+            <!-- 模型列表显示区域 -->
+            <div id="modelsContainer" class="mt-6 flex-grow flex flex-col">
+                <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-3">可用模型:</h2>
+                <ul id="modelsList" class="flex-grow h-96 overflow-y-auto bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-2">
+                    <li class="text-gray-400 dark:text-gray-500">请先选择供应商并输入 API 密钥...</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 右侧：对话测试界面 -->
+        <div id="chatContainer" class="w-full md:w-1/2 flex flex-col border-t-2 md:border-t-0 md:border-l-2 border-gray-200 dark:border-gray-700 pt-6 md:pt-0 md:pl-8 hidden">
+             <div class="flex justify-between items-center mb-3">
+                 <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200">测试对话</h2>
+                 <button id="clearChatButton" class="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">清空对话</button>
+            </div>
+            
+            <!-- 模型选择 -->
+             <div class="mb-4">
+                <label for="modelSelector" class="block text-sm font-medium text-gray-700 dark:text-gray-300">选择一个对话模型:</label>
+                <select id="modelSelector" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                    <option>请先获取模型列表</option>
+                </select>
+             </div>
+             
+             <!-- 聊天记录 -->
+             <div id="chatLog" class="flex-grow h-96 bg-gray-50 dark:bg-gray-900 rounded-lg p-4 overflow-y-auto mb-4 flex flex-col space-y-2 border border-gray-200 dark:border-gray-600">
+                <div class="assistant-bubble chat-bubble">你好！选择一个供应商和模型，然后我们就可以开始聊天了。</div>
+             </div>
+
+             <!-- 输入区域 -->
+             <div class="flex gap-3">
+                <textarea id="chatInput" placeholder="输入您的消息..." rows="2" class="flex-grow w-full px-4 py-2 text-gray-700 bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 resize-none"></textarea>
+                <button id="sendButton" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition duration-200 flex items-center justify-center">
+                    发送
+                </button>
+             </div>
+        </div>
+
+    </div>
+
+    <script>
+        const apiProviderSelector = document.getElementById('apiProvider');
+        const apiKeyInput = document.getElementById('apiKey');
+        const fetchButton = document.getElementById('fetchButton');
+        const modelsList = document.getElementById('modelsList');
+        const errorMessage = document.getElementById('errorMessage');
+        const loader = document.getElementById('loader');
+        const buttonText = document.getElementById('buttonText');
+        
+        const chatContainer = document.getElementById('chatContainer');
+        const modelSelector = document.getElementById('modelSelector');
+        const chatLog = document.getElementById('chatLog');
+        const chatInput = document.getElementById('chatInput');
+        const sendButton = document.getElementById('sendButton');
+        const clearChatButton = document.getElementById('clearChatButton');
+
+        let conversationHistory = [];
+        
+        // --- API 配置 ---
+        const apiConfigs = {
+            openai: {
+                name: "OpenAI",
+                keyPlaceholder: "输入您的 OpenAI API 密钥 (sk-...)",
+                modelsUrl: 'https://api.openai.com/v1/models',
+                chatUrl: 'https://api.openai.com/v1/chat/completions',
+                getHeaders: (apiKey) => ({
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                }),
+                parseModels: (data) => data.data.filter(m => m.id.includes('gpt')).sort((a,b) => a.id.localeCompare(b.id)),
+                formatChatBody: (model, history) => ({ model, messages: history }),
+                parseChatResponse: (data) => data.choices[0].message.content
+            },
+            anthropic: {
+                name: "Anthropic",
+                keyPlaceholder: "输入您的 Anthropic API 密钥",
+                models: [ // Anthropic 没有模型列表端点，因此我们硬编码
+                    { id: 'claude-3-5-sonnet-20240620' },
+                    { id: 'claude-3-opus-20240229' },
+                    { id: 'claude-3-sonnet-20240229' },
+                    { id: 'claude-3-haiku-20240307' }
+                ],
+                chatUrl: 'https://api.anthropic.com/v1/messages',
+                getHeaders: (apiKey) => ({
+                    'Content-Type': 'application/json',
+                    'x-api-key': apiKey,
+                    'anthropic-version': '2023-06-01'
+                }),
+                formatChatBody: (model, history) => ({ model, messages: history, max_tokens: 4096 }),
+                parseChatResponse: (data) => data.content[0].text
+            },
+            gemini: {
+                name: "Google Gemini",
+                keyPlaceholder: "输入您的 Google AI Studio API 密钥",
+                modelsUrl: (apiKey) => `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`,
+                chatUrl: (apiKey, model) => `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+                getHeaders: () => ({ 'Content-Type': 'application/json' }),
+                parseModels: (data) => data.models.filter(m => m.supportedGenerationMethods.includes("generateContent")).map(m => ({id: m.name.replace('models/', ''), name: m.displayName})).sort((a,b) => a.id.localeCompare(b.id)),
+                formatChatBody: (model, history) => {
+                    // Gemini 需要 'user' 和 'model' 角色
+                    const contents = history.map(turn => ({
+                        role: turn.role === 'assistant' ? 'model' : 'user',
+                        parts: [{ text: turn.content }]
+                    }));
+                    return { contents };
+                },
+                parseChatResponse: (data) => data.candidates[0].content.parts[0].text
+            },
+            kimi: {
+                name: "Kimi (Moonshot)",
+                keyPlaceholder: "输入您的 Moonshot API 密钥",
+                modelsUrl: 'https://api.moonshot.cn/v1/models',
+                chatUrl: 'https://api.moonshot.cn/v1/chat/completions',
+                getHeaders: (apiKey) => ({
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                }),
+                parseModels: (data) => data.data.sort((a,b) => a.id.localeCompare(b.id)),
+                formatChatBody: (model, history) => ({ model, messages: history, temperature: 0.3 }),
+                parseChatResponse: (data) => data.choices[0].message.content
+            },
+            deepseek: {
+                name: "DeepSeek",
+                keyPlaceholder: "输入您的 DeepSeek API 密钥",
+                modelsUrl: 'https://api.deepseek.com/v1/models',
+                chatUrl: 'https://api.deepseek.com/v1/chat/completions',
+                 getHeaders: (apiKey) => ({
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                }),
+                parseModels: (data) => data.data.filter(m => m.id.includes('chat')).sort((a,b) => a.id.localeCompare(b.id)),
+                formatChatBody: (model, history) => ({ model, messages: history }),
+                parseChatResponse: (data) => data.choices[0].message.content
+            }
+        };
+
+        // --- 事件监听器 ---
+
+        apiProviderSelector.addEventListener('change', () => {
+            const provider = apiProviderSelector.value;
+            const config = apiConfigs[provider];
+            apiKeyInput.placeholder = config.keyPlaceholder;
+            resetUI();
+            modelsList.innerHTML = `<li class="text-gray-400 dark:text-gray-500">请为 ${config.name} 输入 API 密钥...</li>`;
+        });
+        
+        fetchButton.addEventListener('click', fetchModels);
+        sendButton.addEventListener('click', sendChatMessage);
+        chatInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendChatMessage();
+            }
+        });
+        clearChatButton.addEventListener('click', () => {
+             conversationHistory = [];
+             chatLog.innerHTML = '<div class="assistant-bubble chat-bubble">对话已清空。</div>';
+        });
+
+        // --- 函数 ---
+        
+        async function fetchModels() {
+            const provider = apiProviderSelector.value;
+            const apiKey = apiKeyInput.value.trim();
+            const config = apiConfigs[provider];
+
+            if (!apiKey && provider !== 'anthropic' && provider !== 'gemini') {
+                 if (!apiKey) {
+                    showError('API 密钥不能为空。');
+                    return;
+                }
+            }
+            
+            startLoading();
+
+            try {
+                let models = [];
+                if (config.models) { // 对于硬编码的模型 (Anthropic)
+                    models = config.models;
+                } else { // 对于需要 API 调用的
+                    const url = typeof config.modelsUrl === 'function' ? config.modelsUrl(apiKey) : config.modelsUrl;
+                    const response = await fetch(url, { headers: config.getHeaders(apiKey) });
+                    const data = await response.json();
+                    if (!response.ok) {
+                        throw new Error(data.error?.message || '获取模型列表失败');
+                    }
+                    models = config.parseModels(data);
+                }
+                
+                populateModels(models);
+                chatContainer.classList.remove('hidden');
+            } catch (error) {
+                showError(error.message);
+                chatContainer.classList.add('hidden');
+            } finally {
+                stopLoading();
+            }
+        }
+        
+        function populateModels(models) {
+            modelsList.innerHTML = '';
+            modelSelector.innerHTML = '';
+            
+            if (models.length === 0) {
+                 modelsList.innerHTML = '<li class="text-gray-400 dark:text-gray-500">未找到兼容的对话模型。</li>';
+                 return;
+            }
+            
+            modelSelector.appendChild(new Option('--- 请选择一个模型 ---', ''));
+            models.forEach(model => {
+                const modelId = model.id;
+                const modelDisplayName = model.name || modelId;
+
+                const listItem = document.createElement('li');
+                listItem.className = 'p-3 bg-white dark:bg-gray-800 rounded-md shadow-sm text-gray-800 dark:text-gray-200 font-mono text-sm';
+                listItem.textContent = modelDisplayName;
+                modelsList.appendChild(listItem);
+                
+                modelSelector.appendChild(new Option(modelDisplayName, modelId));
+            });
+        }
+
+
+        async function sendChatMessage() {
+            const provider = apiProviderSelector.value;
+            const apiKey = apiKeyInput.value.trim();
+            const selectedModel = modelSelector.value;
+            const userMessage = chatInput.value.trim();
+            const config = apiConfigs[provider];
+
+            if (!selectedModel) { appendMessage('请先选择一个对话模型。', 'error'); return; }
+            if (!userMessage) { return; }
+
+            appendMessage(userMessage, 'user');
+            conversationHistory.push({ role: 'user', content: userMessage });
+            chatInput.value = '';
+            chatInput.disabled = true;
+            sendButton.disabled = true;
+
+            const thinkingBubble = appendMessage('思考中...', 'assistant', true);
+            
+            try {
+                const url = typeof config.chatUrl === 'function' ? config.chatUrl(apiKey, selectedModel) : config.chatUrl;
+                const body = config.formatChatBody(selectedModel, conversationHistory);
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: config.getHeaders(apiKey),
+                    body: JSON.stringify(body)
+                });
+                
+                chatLog.removeChild(thinkingBubble);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error?.message || 'API 请求失败');
+                }
+                
+                const assistantMessage = config.parseChatResponse(data);
+                appendMessage(assistantMessage, 'assistant');
+                conversationHistory.push({ role: 'assistant', content: assistantMessage });
+
+            } catch (error) {
+                if (thinkingBubble.parentNode === chatLog) chatLog.removeChild(thinkingBubble);
+                appendMessage(`错误: ${error.message}`, 'error');
+                // 如果出错，从历史中移除最后一条用户消息，以便重试
+                conversationHistory.pop();
+            } finally {
+                chatInput.disabled = false;
+                sendButton.disabled = false;
+                chatInput.focus();
+            }
+        }
+
+        function appendMessage(text, sender, isThinking = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.textContent = text;
+            messageDiv.classList.add('chat-bubble');
+
+            if (sender === 'user') {
+                messageDiv.classList.add('user-bubble');
+            } else if (sender === 'assistant') {
+                messageDiv.classList.add('assistant-bubble');
+                if (isThinking) messageDiv.classList.add('thinking-bubble');
+            } else { // error
+                messageDiv.classList.add('assistant-bubble');
+                messageDiv.style.backgroundColor = '#fee2e2'; // red-100
+                messageDiv.style.color = '#b91c1c'; // red-700
+            }
+            chatLog.appendChild(messageDiv);
+            chatLog.scrollTop = chatLog.scrollHeight;
+            return messageDiv;
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.remove('hidden');
+        }
+        
+        function resetUI() {
+            errorMessage.classList.add('hidden');
+            chatContainer.classList.add('hidden');
+            conversationHistory = [];
+            chatLog.innerHTML = '<div class="assistant-bubble chat-bubble">你好！选择一个供应商和模型，然后我们就可以开始聊天了。</div>';
+        }
+
+        function startLoading() {
+            resetUI();
+            modelsList.innerHTML = '<li class="text-gray-400 dark:text-gray-500">正在加载模型...</li>';
+            fetchButton.disabled = true;
+            loader.classList.remove('hidden');
+            buttonText.textContent = '获取中...';
+        }
+
+        function stopLoading() {
+            fetchButton.disabled = false;
+            loader.classList.add('hidden');
+            buttonText.textContent = '获取模型';
+        }
+        
+        // 初始化
+        apiProviderSelector.dispatchEvent(new Event('change'));
+
+    </script>
+
+</body>
+</html>
+

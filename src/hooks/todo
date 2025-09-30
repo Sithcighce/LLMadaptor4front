@@ -1,0 +1,245 @@
+# Hooks 开发待办事项
+
+## 📋 当前状态 (2025年9月30日)
+
+### ✅ 已完成
+- [x] 核心基础设施 `useLlmConnectorLogic` - 管理 llmClient 实例
+- [x] 连接管理功能 `useConnectionManager` - 服务于基础 UI 组件
+- [x] 架构文档 `README.md` - 设计原则和规范
+- [x] 基础 UI 组件重构 - ConnectionForm, ModelSelect, TokenUsage
+- [x] 修复连接状态逻辑 - 未连接时禁用模型选择等操作
+
+## 🚀 计划开发的功能 Hook
+
+### 1. 🎯 高优先级 - 核心功能
+
+#### `useChatManager` - 聊天功能管理
+```typescript
+// 目标接口设计
+const {
+  messages,           // 消息历史
+  sendMessage,        // 发送消息
+  isStreaming,        // 是否正在流式响应
+  clearMessages,      // 清空消息
+  retryLastMessage    // 重试最后一条消息
+} = useChatManager();
+```
+
+**功能需求：**
+- [ ] 消息历史管理 (useState<ChatMessage[]>)
+- [ ] 发送消息功能 (基于 llmClient.chat)
+- [ ] 流式响应支持 (处理 stream 类型返回)
+- [ ] 错误处理和重试机制
+- [ ] 消息持久化 (localStorage)
+- [ ] 消息导出功能
+
+**对应 UI 组件：**
+- `ChatInterface` - 聊天主界面
+- `MessageBubble` - 消息气泡
+- `InputBox` - 消息输入框
+- `StreamingIndicator` - 流式响应指示器
+
+---
+
+#### `useAdvancedSettings` - 高级参数配置
+```typescript
+// 目标接口设计
+const {
+  settings,           // 当前参数配置
+  updateSetting,      // 更新单个参数
+  resetToDefaults,    // 重置为默认值
+  importConfig,       // 导入配置
+  exportConfig        // 导出配置
+} = useAdvancedSettings();
+```
+
+**功能需求：**
+- [ ] 参数状态管理 (temperature, topK, topP, maxTokens等)
+- [ ] 实时参数验证 (范围检查、类型检查)
+- [ ] 配置持久化 (localStorage)
+- [ ] 参数预设管理 (保存/加载预设配置)
+- [ ] 配置导入/导出 (JSON格式)
+- [ ] 与 llmClient 的参数同步
+
+**对应 UI 组件：**
+- `SettingsPanel` - 主设置面板
+- `ParameterSlider` - 参数滑块组件
+- `PresetSelector` - 预设配置选择器
+- `ConfigImportExport` - 配置导入导出
+
+---
+
+### 2. 🔧 中等优先级 - 扩展功能
+
+#### `useToolRegistry` - 工具注册管理
+```typescript
+// 目标接口设计
+const {
+  registeredTools,    // 已注册的工具列表
+  availableTools,     // 可用工具列表
+  registerTool,       // 注册新工具
+  unregisterTool,     // 取消注册工具
+  callTool           // 调用工具
+} = useToolRegistry();
+```
+
+**功能需求：**
+- [ ] 工具注册表管理
+- [ ] MCP (Model Context Protocol) 支持
+- [ ] 工具调用接口
+- [ ] 工具权限管理
+- [ ] 工具商店集成 (可选)
+
+---
+
+#### `useRAGManager` - RAG 功能管理
+```typescript
+// 目标接口设计  
+const {
+  ragConfig,          // RAG 配置
+  documents,          // 已索引的文档
+  uploadDocument,     // 上传文档
+  searchDocuments,    // 搜索文档
+  enableRAG,          // 启用 RAG
+  disableRAG         // 禁用 RAG
+} = useRAGManager();
+```
+
+**功能需求：**
+- [ ] 向量数据库集成
+- [ ] 文档上传和处理
+- [ ] 检索配置管理
+- [ ] RAG 增强的聊天功能
+
+---
+
+### 3. 🎨 低优先级 - 增强功能
+
+#### `useFineTuningManager` - 微调管理
+- [ ] 微调任务创建和监控
+- [ ] 数据集管理
+- [ ] 模型版本控制
+
+#### `useWorkflowManager` - 工作流管理  
+- [ ] 多步骤 LLM 调用链
+- [ ] 工作流模板
+- [ ] 执行状态管理
+
+#### `useCollaborationManager` - 协作功能
+- [ ] 多用户会话共享
+- [ ] 消息同步
+- [ ] 权限管理
+
+---
+
+## 🧹 清理任务
+
+### 需要处理的冗余文件：
+- [ ] 评估 `useConnectorController.ts` - 与 `useLlmConnectorLogic` 功能重复
+- [ ] 检查 `useLlmConnectorContext.tsx` - 可能与当前 Context 重复
+- [ ] 整合 `useMessageHandler.ts` - 可能属于未来的 `useChatManager`
+- [ ] 评估 `useProcessBlock.ts` 和 `useChangePath.ts` - 是否属于核心功能
+
+### 文件重命名和整理：
+- [ ] 统一命名规范
+- [ ] 添加文件头部注释
+- [ ] 更新导入导出语句
+
+---
+
+## 📦 NPM 包规划
+
+### 对外暴露的接口：
+```typescript
+// 主要导出 - 用户最常用
+export { useLlmConnector } from './hooks/useLlmConnector';
+export { LlmConnectorProvider } from './providers/LlmConnectorProvider';
+
+// UI 组件 - 开箱即用
+export { 
+  ConnectionForm, 
+  ModelSelect, 
+  TokenUsage 
+} from './components';
+
+// 高级 Hooks - 高级用户使用
+export { 
+  useChatManager,
+  useAdvancedSettings,
+  useToolRegistry,
+  useRAGManager 
+} from './hooks/advanced';
+
+// 核心接口 - 框架开发者使用
+export { 
+  useLlmConnectorLogic,
+  useConnectionManager 
+} from './hooks/core';
+```
+
+### NPM 包的价值主张：
+1. **基础开发者** - 直接使用 UI 组件，无需关心内部实现
+2. **应用开发者** - 使用功能 Hook 构建自定义应用
+3. **框架开发者** - 基于核心接口扩展新功能
+
+---
+
+## 🎯 开发优先级
+
+### Phase 1 (当前阶段) - 基础设施 ✅
+- [x] 核心架构设计
+- [x] 基础连接管理
+- [x] UI 组件重构
+
+### Phase 2 (下个Sprint) - 核心功能
+- [ ] `useChatManager` 实现
+- [ ] `useAdvancedSettings` 实现
+- [ ] 聊天 UI 组件开发
+
+### Phase 3 (后续版本) - 扩展功能
+- [ ] `useToolRegistry` 实现
+- [ ] `useRAGManager` 实现
+- [ ] 高级 UI 组件开发
+
+### Phase 4 (未来规划) - 生态系统
+- [ ] NPM 包发布
+- [ ] 文档和示例完善
+- [ ] 社区功能和插件系统
+
+---
+
+## 💡 设计决策记录
+
+### 为什么选择当前的架构？
+1. **单一数据源** - `llmClient` 作为唯一真实数据源
+2. **功能解耦** - 每个 Hook 专注单一功能域
+3. **渐进增强** - 可以逐步添加新功能而不影响现有代码
+4. **测试友好** - 每个 Hook 都可以独立测试
+
+### 关键设计原则：
+- 所有功能 Hook 都依赖核心 `useLlmConnectorLogic`
+- UI 组件只使用对应功能域的 Hook
+- 保持接口简洁，避免暴露内部实现细节
+- 支持渐进式采用，用户可以选择使用部分功能
+
+---
+
+## 📝 注意事项
+
+### 开发时需要考虑的问题：
+- [ ] **类型安全** - 确保所有接口都有完整的 TypeScript 类型
+- [ ] **错误处理** - 统一的错误处理和用户反馈机制
+- [ ] **性能优化** - 避免不必要的重渲染和 API 调用
+- [ ] **测试覆盖** - 为每个 Hook 编写单元测试
+- [ ] **文档完善** - 每个新功能都要有对应的使用文档和示例
+
+### 兼容性考虑：
+- [ ] 确保新功能向后兼容现有接口
+- [ ] 支持渐进式迁移路径
+- [ ] 考虑不同 LLM Provider 的差异性
+
+---
+
+*创建时间：2025年9月30日*
+*负责人：开发团队*
+*下次更新：功能开发完成时*

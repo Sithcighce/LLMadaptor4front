@@ -110,11 +110,30 @@ const ChatPanel = () => {
 
 // The main App component that lays out the playground
 const App = () => {
+  // 容器样式，对应 UIdemo 的 w-full max-w-md mx-auto p-4 space-y-12
+  const containerStyle = {
+    width: '100%',
+    maxWidth: '28rem', /* max-w-md = 448px */
+    margin: '0 auto',
+    padding: '1rem',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '3rem', /* space-y-12 */
+  };
+
+  const titleStyle = {
+    fontSize: '1.875rem', /* text-3xl */
+    fontWeight: 'bold',
+    textAlign: 'center' as const,
+    marginBottom: '2rem',
+    color: '#E5E7EB', /* text-gray-200 */
+  };
+
   return (
     <LlmConnectorProvider>
-      <div className="w-full max-w-md mx-auto p-4 space-y-12">
+      <div style={containerStyle}>
         <div>
-          <h1 className="text-3xl font-bold text-center mb-8 text-gray-200">中文版组件</h1>
+          <h1 style={titleStyle}>中文版组件</h1>
           <div>
             <ModelSelectZh />
             <ConnectionFormZh />

@@ -1,6 +1,40 @@
 import React from 'react';
-import { useLlmConnector } from '../../hooks/useLlmConnector';
+import { useConnectionManager } from '../../hooks/useConnectionManager';
 import type { TokenUsageLocale } from './types';
+
+// 内嵌样式，确保开箱即用
+const styles = {
+  container: {
+    marginBottom: '2rem',
+  },
+  title: {
+    fontSize: '1.125rem',
+    fontWeight: '600',
+    marginBottom: '0.75rem',
+    color: '#9CA3AF', /* text-gray-400 */
+  },
+  card: {
+    padding: '1rem',
+    backgroundColor: '#111827', /* bg-gray-900 */
+    borderRadius: '0.5rem',
+    display: 'flex',
+    justifyContent: 'space-around',
+    textAlign: 'center' as const,
+  },
+  divider: {
+    borderLeft: '1px solid #374151', /* border-gray-700 */
+  },
+  label: {
+    fontSize: '0.75rem',
+    color: '#9CA3AF', /* text-gray-400 */
+    marginBottom: '0.25rem',
+  },
+  value: {
+    fontSize: '1.125rem',
+    fontWeight: '600',
+    color: '#E5E7EB', /* text-gray-200 */
+  },
+};
 
 // Redefined props for the new architecture
 interface TokenUsageProps {
@@ -9,7 +43,7 @@ interface TokenUsageProps {
 }
 
 const TokenUsage: React.FC<TokenUsageProps> = ({ className, locale: localeOverride }) => {
-  const { states } = useLlmConnector();
+  const { tokenUsage } = useConnectionManager();
 
   // Default locale setup
   const defaultLocale: TokenUsageLocale = {
@@ -24,20 +58,20 @@ const TokenUsage: React.FC<TokenUsageProps> = ({ className, locale: localeOverri
   const formatNumber = (num: number) => num.toLocaleString('en-US');
 
   return (
-    <div className={`mb-8 ${className || ''}`}>
-      <h2 className="text-lg font-semibold mb-3 text-gray-400">{locale.title}</h2>
-      <div className="p-4 bg-gray-900 rounded-lg flex justify-around text-center">
+    <div style={{ ...styles.container }} className={className}>
+      <h2 style={styles.title}>{locale.title}</h2>
+      <div style={styles.card}>
         <div>
-          <div className="text-xs text-gray-400 mb-1">{locale.inputLabel}</div>
-          <div className="text-lg font-semibold text-gray-200">
-            {states.tokenUsage ? formatNumber(states.tokenUsage.input) : '-'}
+          <div style={styles.label}>{locale.inputLabel}</div>
+          <div style={styles.value}>
+            {tokenUsage ? formatNumber(tokenUsage.input) : '-'}
           </div>
         </div>
-        <div className="border-l border-gray-700"></div>
+        <div style={styles.divider}></div>
         <div>
-          <div className="text-xs text-gray-400 mb-1">{locale.outputLabel}</div>
-          <div className="text-lg font-semibold text-gray-200">
-            {states.tokenUsage ? formatNumber(states.tokenUsage.output) : '-'}
+          <div style={styles.label}>{locale.outputLabel}</div>
+          <div style={styles.value}>
+            {tokenUsage ? formatNumber(tokenUsage.output) : '-'}
           </div>
         </div>
       </div>
