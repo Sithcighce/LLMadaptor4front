@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模型选择器测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #0f172a;
+            color: white;
+        }
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #374151;
+            border-radius: 8px;
+        }
+        h2 {
+            color: #9CA3AF;
+            margin-bottom: 15px;
+        }
+        .test-instruction {
+            background-color: #1e293b;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .api-test {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #374151;
+            border-radius: 4px;
+            background-color: #1f2937;
+            color: white;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #2563eb;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #1f2937;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>LLM Connector 模型获取测试</h1>
+        
+        <div class="section">
+            <h2>测试说明</h2>
+            <div class="test-instruction">
+                <p><strong>测试目的：</strong>验证模型选择器是否能正确从各个提供商获取模型列表</p>
+                <p><strong>测试步骤：</strong></p>
+                <ol>
+                    <li>在主应用中选择一个提供商（OpenAI、Anthropic、Gemini）</li>
+                    <li>输入对应的 API Key</li>
+                    <li>查看模型选择器是否显示"请先输入 API Key" 或实际的模型</li>
+                    <li>点击模型选择器查看是否能获取到模型列表</li>
+                    <li>如果列表为空，尝试点击"刷新"按钮</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>API 端点测试</h2>
+            <p>如果模型获取失败，可以在这里手动测试 API 端点：</p>
+            
+            <div class="api-test">
+                <select id="providerSelect">
+                    <option value="openai">OpenAI</option>
+                    <option value="anthropic">Anthropic</option>
+                    <option value="gemini">Gemini</option>
+                </select>
+                <input type="password" id="apiKeyInput" placeholder="输入 API Key">
+                <button onclick="testApiEndpoint()">测试 API</button>
+            </div>
+            
+            <div id="testResult" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="section">
+            <h2>已知问题和解决方案</h2>
+            <ul>
+                <li><strong>CORS 问题：</strong>某些提供商可能会阻止浏览器直接访问，这是正常的安全限制</li>
+                <li><strong>API Key 格式：</strong>确保 API Key 格式正确，没有多余的空格</li>
+                <li><strong>权限问题：</strong>确保 API Key 有足够的权限访问模型列表</li>
+                <li><strong>网络问题：</strong>检查网络连接和防火墙设置</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        async function testApiEndpoint() {
+            const provider = document.getElementById('providerSelect').value;
+            const apiKey = document.getElementById('apiKeyInput').value;
+            const resultDiv = document.getElementById('testResult');
+            
+            if (!apiKey) {
+                alert('请输入 API Key');
+                return;
+            }
+            
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = '正在测试...';
+            
+            try {
+                let url, headers;
+                
+                switch (provider) {
+                    case 'openai':
+                        url = 'https://api.openai.com/v1/models';
+                        headers = { 'Authorization': `Bearer ${apiKey}` };
+                        break;
+                    case 'anthropic':
+                        url = 'https://api.anthropic.com/v1/models';
+                        headers = { 
+                            'x-api-key': apiKey,
+                            'anthropic-version': '2023-06-01'
+                        };
+                        break;
+                    case 'gemini':
+                        url = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`;
+                        headers = {};
+                        break;
+                }
+                
+                const response = await fetch(url, { headers });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.textContent = `✅ 成功！返回数据：\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.textContent = `❌ 失败！状态码: ${response.status}\n错误信息：\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.textContent = `❌ 网络错误：${error.message}\n\n这通常是由于 CORS 限制导致的。在实际应用中，应该通过后端代理或使用适当的跨域设置。`;
+            }
+        }
+    </script>
+</body>
+</html>

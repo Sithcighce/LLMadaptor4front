@@ -2,36 +2,58 @@
 
 ## 📋 当前状态 (2025年9月30日)
 
-### ✅ 已完成
+### ✅ 已完成 - 基础设施完备！
 - [x] 核心基础设施 `useLlmConnectorLogic` - 管理 llmClient 实例
 - [x] 连接管理功能 `useConnectionManager` - 服务于基础 UI 组件
 - [x] 架构文档 `README.md` - 设计原则和规范
 - [x] 基础 UI 组件重构 - ConnectionForm, ModelSelect, TokenUsage
 - [x] 修复连接状态逻辑 - 未连接时禁用模型选择等操作
+- [x] **🛠️ 工具函数库完整提取** - 从 RCB 中提取的核心工具函数
+  - [x] `messageFormatter` - 消息格式转换 ⭐⭐⭐⭐
+  - [x] `streamProcessor` - 流式响应处理 ⭐⭐⭐⭐⭐
+  - [x] `abortController` - 中断控制 ⭐⭐⭐⭐⭐
+  - [x] `errorHandler` - 错误处理和状态恢复 ⭐⭐⭐⭐
+  - [x] `keyboardShortcuts` - 快捷键处理 ⭐⭐⭐
+
+### 🎯 当前优势
+✅ **完全从 RCB 解离** - 独立的 LLM 连接器库  
+✅ **工具函数就绪** - 所有聊天管理核心逻辑已提取  
+✅ **架构稳定** - 核心基础设施经过验证  
+✅ **设计清晰** - 分层架构，关注点分离
 
 ## 🚀 计划开发的功能 Hook
 
 ### 1. 🎯 高优先级 - 核心功能
 
-#### `useChatManager` - 聊天功能管理
+#### `useChatManager` - 聊天功能管理 🚀 **立即可开发**
 ```typescript
-// 目标接口设计
+// 目标接口设计 - 基于现有工具函数构建
 const {
+  // 📝 核心状态
   messages,           // 消息历史
-  sendMessage,        // 发送消息
   isStreaming,        // 是否正在流式响应
+  error,              // 错误状态
+  
+  // 🎛️ 核心操作
+  sendMessage,        // 发送消息 (集成 streamProcessor)
   clearMessages,      // 清空消息
-  retryLastMessage    // 重试最后一条消息
+  retryLastMessage,   // 重试最后一条消息
+  abortResponse,      // 中断响应 (基于 abortController)
+  
+  // 📊 辅助功能
+  tokenUsage,         // Token 使用统计
+  shortcuts,          // 键盘快捷键 (基于 keyboardShortcuts)
 } = useChatManager();
 ```
 
-**功能需求：**
-- [ ] 消息历史管理 (useState<ChatMessage[]>)
-- [ ] 发送消息功能 (基于 llmClient.chat)
-- [ ] 流式响应支持 (处理 stream 类型返回)
-- [ ] 错误处理和重试机制
-- [ ] 消息持久化 (localStorage)
-- [ ] 消息导出功能
+**实现策略 - 基于现有工具函数：**
+- ✅ **消息管理** → 使用 `messageFormatter` (createUserMessage, createAssistantMessage)
+- ✅ **流式响应** → 使用 `streamProcessor` (processStream, StreamProcessor)
+- ✅ **中断控制** → 使用 `abortController` (useAbortController)
+- ✅ **错误处理** → 使用 `errorHandler` (createErrorHandler)
+- ✅ **快捷键** → 使用 `keyboardShortcuts` (useChatKeyboardShortcuts)
+- 🔄 **持久化** → 基于 localStorage (参考 useLlmConnectorLogic 模式)
+- 🔄 **Token 统计** → 集成到核心基础设施
 
 **对应 UI 组件：**
 - `ChatInterface` - 聊天主界面
@@ -132,69 +154,86 @@ const {
 
 ---
 
-## 🧹 清理任务
+## 🎯 使用场景指导
 
-### 需要处理的冗余文件：
-- [ ] 评估 `useConnectorController.ts` - 与 `useLlmConnectorLogic` 功能重复
-- [ ] 检查 `useLlmConnectorContext.tsx` - 可能与当前 Context 重复
-- [ ] 整合 `useMessageHandler.ts` - 可能属于未来的 `useChatManager`
-- [ ] 评估 `useProcessBlock.ts` 和 `useChangePath.ts` - 是否属于核心功能
+### 场景1：纯"后端"调用 - 逻辑触发
+```typescript
+// 推荐使用：直接使用核心基础设施
+const { llmClient } = useLlmConnectorLogic();
 
-### 文件重命名和整理：
-- [ ] 统一命名规范
-- [ ] 添加文件头部注释
-- [ ] 更新导入导出语句
+// 简单调用
+const result = await llmClient.chat({
+  messages: [{ role: 'user', content: '你的问题' }],
+  stream: false
+});
+
+// 可选：配合工具函数使用
+const { createController } = useAbortController();
+const controller = createController();
+// ...
+```
+
+### 场景2：聊天界面调用 - UI 交互
+```typescript
+// 推荐使用：完整的聊天管理 Hook
+const {
+  messages, sendMessage, isStreaming,
+  clearMessages, abortResponse, error
+} = useChatManager(); // 基于工具函数构建
+
+// UI 组件直接使用
+<ChatInterface 
+  messages={messages}
+  onSendMessage={sendMessage}
+  isStreaming={isStreaming}
+  onAbort={abortResponse}
+/>
+```
 
 ---
 
-## 📦 NPM 包规划
+## 🎁 项目价值
 
-### 对外暴露的接口：
-```typescript
-// 主要导出 - 用户最常用
-export { useLlmConnector } from './hooks/useLlmConnector';
-export { LlmConnectorProvider } from './providers/LlmConnectorProvider';
+### 核心优势
+1. **🔥 工具函数完备**：从RCB中提取的高质量工具函数，经过实战验证
+2. **🏗️ 架构清晰**：分层设计，关注点分离，易于扩展和维护  
+3. **⚡ 即用即得**：场景1可立即使用，场景2基于现有工具快速构建
+4. **🎯 用户导向**：针对不同使用场景提供最优化的解决方案
 
-// UI 组件 - 开箱即用
-export { 
-  ConnectionForm, 
-  ModelSelect, 
-  TokenUsage 
-} from './components';
-
-// 高级 Hooks - 高级用户使用
-export { 
-  useChatManager,
-  useAdvancedSettings,
-  useToolRegistry,
-  useRAGManager 
-} from './hooks/advanced';
-
-// 核心接口 - 框架开发者使用
-export { 
-  useLlmConnectorLogic,
-  useConnectionManager 
-} from './hooks/core';
-```
-
-### NPM 包的价值主张：
-1. **基础开发者** - 直接使用 UI 组件，无需关心内部实现
-2. **应用开发者** - 使用功能 Hook 构建自定义应用
-3. **框架开发者** - 基于核心接口扩展新功能
+### 对不同用户的价值
+- **应用开发者**：直接使用Hook构建LLM应用，无需从零开始
+- **UI组件开发者**：基于稳定的Hook构建自定义界面组件
+- **企业集成商**：将LLM功能快速集成到现有系统中
 
 ---
 
 ## 🎯 开发优先级
 
-### Phase 1 (当前阶段) - 基础设施 ✅
+### Phase 1 (当前阶段) - 基础设施 ✅ **已完成**
 - [x] 核心架构设计
 - [x] 基础连接管理
 - [x] UI 组件重构
+- [x] 🛠️ **工具函数库完整提取** (关键成果！)
 
-### Phase 2 (下个Sprint) - 核心功能
-- [ ] `useChatManager` 实现
+### Phase 2 (立即开始) - 🚀 **useChatManager 开发**
+- [ ] **Phase 2.1 - 基础实现**
+  - [ ] 消息历史管理 (基于 messageFormatter)
+  - [ ] 发送消息功能 (集成 streamProcessor)
+  - [ ] 中断控制 (基于 abortController)
+  - [ ] 错误处理 (基于 errorHandler)
+- [ ] **Phase 2.2 - 增强功能**
+  - [ ] 持久化支持 (localStorage)
+  - [ ] 快捷键集成 (基于 keyboardShortcuts)
+  - [ ] Token 使用统计
+- [ ] **Phase 2.3 - UI 组件**
+  - [ ] ChatInterface 主界面
+  - [ ] MessageBubble 消息气泡
+  - [ ] InputBox 输入框
+
+### Phase 3 (后续版本) - 扩展功能
 - [ ] `useAdvancedSettings` 实现
-- [ ] 聊天 UI 组件开发
+- [ ] `useToolRegistry` 实现
+- [ ] `useRAGManager` 实现
 
 ### Phase 3 (后续版本) - 扩展功能
 - [ ] `useToolRegistry` 实现

@@ -19,7 +19,7 @@ class WebLlmProvider implements Provider {
 
 	/**
 	 * Sets default values for the provider based on given configuration. Configuration guide here:
-	 * https://github.com/React-ChatBotify-Plugins/llm-connector/blob/main/docs/providers/WebLlm.md
+	 * https://github.com/Sithcighce/LLMadaptor4front/blob/main/docs/providers/WebLlm.md
 	 *
 	 * @param config configuration for setup
 	 */

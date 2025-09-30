@@ -1,12 +1,12 @@
 <p align="center">
-  <img width="200px" src="https://raw.githubusercontent.com/react-chatbotify-plugins/llm-connector/main/src/assets/logo.webp" />
+  <img width="200px" src="https://raw.githubusercontent.com/Sithcighce/LLMadaptor4front/main/src/assets/logo.webp" />
   <h1 align="center">LLM Connector</h1>
 </p>
 
 <p align="center">
-  <a href="https://github.com/react-chatbotify-plugins/llm-connector/actions/workflows/ci-cd-pipeline.yml"> <img src="https://github.com/react-chatbotify-plugins/llm-connector/actions/workflows/ci-cd-pipeline.yml/badge.svg" /> </a>
-  <a href="https://www.npmjs.com/package/@rcb-plugins/llm-connector"> <img src="https://img.shields.io/npm/v/@rcb-plugins/llm-connector?logo=semver&label=version&color=%2331c854" /> </a>
-  <a href="https://www.npmjs.com/package/@rcb-plugins/llm-connector"> <img src="https://img.shields.io/badge/react-16--19-orange?logo=react&label=react" /> </a>
+  <a href="https://github.com/Sithcighce/LLMadaptor4front/actions/workflows/ci-cd-pipeline.yml"> <img src="https://github.com/Sithcighce/LLMadaptor4front/actions/workflows/ci-cd-pipeline.yml/badge.svg" /> </a>
+  <a href="https://www.npmjs.com/package/llm-connector"> <img src="https://img.shields.io/npm/v/llm-connector?logo=semver&label=version&color=%2331c854" /> </a>
+  <a href="https://www.npmjs.com/package/llm-connector"> <img src="https://img.shields.io/badge/react-16--19-orange?logo=react&label=react" /> </a>
 </p>
 
 ## 简介
@@ -35,7 +35,7 @@
 
 安装依赖：
 ```bash
-npm install @rcb-plugins/llm-connector
+npm install llm-connector
 ```
 
 ### 方式一：即插即用
@@ -50,7 +50,7 @@ import {
   ModelSelectZh,
   TokenUsageZh,
   useLlmConnector
-} from '@rcb-plugins/llm-connector';
+} from 'llm-connector';
 
 // 一个用于测试对话功能的组件
 const ChatButton = () => {
@@ -95,7 +95,7 @@ function App() {
 
 ```tsx
 import React from 'react';
-import { LlmConnectorProvider, useLlmConnector } from '@rcb-plugins/llm-connector';
+import { LlmConnectorProvider, useLlmConnector } from 'llm-connector';
 
 const MyCustomConnectorUI = () => {
   const { states, handlers, llmClient } = useLlmConnector();

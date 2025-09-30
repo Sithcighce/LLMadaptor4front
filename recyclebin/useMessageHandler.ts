@@ -7,8 +7,8 @@ import {
 	useOnRcbEvent,
 	RcbEvent,
 } from 'react-chatbotify';
-import { handlePrompt } from '../utils/promptHandler';
-import { Provider } from '../types/Provider';
+import { handlePrompt } from './promptHandler';
+import { Provider } from '../src/types/Provider';
 
 // the core library enforces a 400ms delay before typing indicator is shown
 // this ensures responses do not appear even before the typing indicator

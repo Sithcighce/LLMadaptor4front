@@ -1,6 +1,6 @@
-import { formatStream } from './streamController';
-import { Provider } from '../types/Provider';
-import { ChatMessage } from '../types/ChatMessage';
+import { formatStream } from '../src/utils/streamController';
+import { Provider } from '../src/types/Provider';
+import { ChatMessage } from '../src/types/ChatMessage';
 import { Message } from 'react-chatbotify';
 
 /**

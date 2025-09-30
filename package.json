@@ -1,22 +1,23 @@
 {
-  "name": "@rcb-plugins/llm-connector",
-  "pluginLogo": "https://cdn.jsdelivr.net/gh/react-chatbotify-plugins/llm-connector@main/src/assets/logo.webp",
-  "homepage": "https://github.com/React-ChatBotify-Plugins/llm-connector",
+  "name": "llm-connector",
+  "homepage": "https://github.com/Sithcighce/LLMadaptor4front",
   "keywords": [
     "react",
     "frontend-library",
-    "plugins",
+    "llm",
+    "ai",
     "gemini",
     "openai",
+    "anthropic",
     "webllm",
-    "react-chatbotify",
-    "react-chatbotify-plugin"
+    "chat",
+    "typescript"
   ],
   "files": [
     "./dist"
   ],
   "version": "0.3.2",
-  "description": "A generic LLM connector for integrating Large Language Models (LLMs) in React ChatBotify!",
+  "description": "A powerful React library for connecting to hundreds of LLM providers with a simple, unified interface. Bring your own API key solution for frontend applications.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -39,16 +40,15 @@
     "preview": "vite preview",
     "prepack": "tsc && vite build"
   },
-  "author": "tjtanjin",
+  "author": "Sithcighce",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/React-ChatBotify-Plugins/llm-connector"
+    "url": "https://github.com/Sithcighce/LLMadaptor4front"
   },
   "peerDependencies": {
     "@mlc-ai/web-llm": "^0.2.78",
     "react": ">=16.14.0",
-    "react-chatbotify": "^2.0.0-beta.39",
     "react-dom": ">=16.14.0"
   },
   "devDependencies": {

@@ -2,7 +2,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { TokenJS } from 'token.js/dist/index.cjs';
 import { LlmClient } from '../client/LlmClient';
-import type { ProviderId, ConnectorStatus, TokenUsage } from '../types';
+import type { ProviderId, ConnectorStatus, TokenUsage } from '../types/index';
 
 const LOCAL_STORAGE_KEY = 'llm-connector-config';
 
@@ -81,9 +81,10 @@ export const useLlmConnectorLogic = () => {
       };
       const tokenJsClient = new TokenJS(config);
       
-      // For now, we can't fetch models from token.js, so we'll use a default
-      // In the future, we could try a test call or use a method if token.js provides one.
-      setModelOptions([model]);
+      // 连接时自动获取模型列表
+      if (modelOptions.length === 0) {
+        await fetchModels();
+      }
 
       const client = new LlmClient(tokenJsClient, providerId, model);
       setLlmClient(client);
@@ -156,7 +157,7 @@ export const useLlmConnectorLogic = () => {
         const payload = await response.json();
         models = (payload.data ?? []).map((item: { id?: string; name?: string }) => item.id ?? item.name).filter(Boolean) as string[];
         
-      } else if (providerId === 'google') {
+      } else if (providerId === 'gemini') {
         const apiRoot = baseUrl || 'https://generativelanguage.googleapis.com/v1beta';
         const url = `${apiRoot}/models?key=${encodeURIComponent(apiKey.trim())}`;
         
@@ -186,12 +187,12 @@ export const useLlmConnectorLogic = () => {
     }
   }, [apiKey, providerId, model, baseUrl]);
 
-  // --- Fetch models when provider or apiKey changes ---
-  useEffect(() => {
-    if (apiKey && providerId) {
-      fetchModels();
-    }
-  }, [fetchModels]);
+  // --- 不自动获取模型，由用户手动触发或在连接时获取 ---
+  // useEffect(() => {
+  //   if (apiKey && providerId) {
+  //     fetchModels();
+  //   }
+  // }, [fetchModels]);
 
   const handlers = {
     setProviderId,

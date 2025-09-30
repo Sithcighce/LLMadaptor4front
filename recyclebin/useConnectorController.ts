@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { createLlmClient } from '../client/createLlmClient';
-import AnthropicProvider from '../providers/AnthropicProvider';
-import GeminiProvider from '../providers/GeminiProvider';
-import OpenaiProvider from '../providers/OpenaiProvider';
-import WebLlmProvider from '../providers/WebLlmProvider';
-import type { Provider } from '../types/Provider';
-import type { ChatMessage } from '../types/ChatMessage';
-import type { LlmClient } from '../client/types';
+import { createLlmClient } from '../src/client/createLlmClient';
+import AnthropicProvider from '../src/providers/AnthropicProvider';
+import GeminiProvider from '../src/providers/GeminiProvider';
+import OpenaiProvider from '../src/providers/OpenaiProvider';
+import WebLlmProvider from '../src/providers/WebLlmProvider';
+import type { Provider } from '../src/types/Provider';
+import type { ChatMessage } from '../src/types/ChatMessage';
+import type { LlmClient } from '../src/client/types';
 
 const DEFAULT_STORAGE_KEY = 'llm-connector-config';
 

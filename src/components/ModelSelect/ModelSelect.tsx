@@ -145,8 +145,8 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ className, locale: localeOver
   const locale = { ...defaultLocale, ...localeOverride };
 
   const handleToggle = () => {
-    // 只有在连接状态下才允许操作
-    if (status !== 'connected') {
+    // 只要有 API Key 就允许操作
+    if (!apiKey) {
       return;
     }
     
@@ -158,20 +158,20 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ className, locale: localeOver
   };
 
   const handleSelect = (modelName: string) => {
-    // 只有在连接状态下才允许操作
-    if (status !== 'connected') {
+    // 只要有 API Key 就允许选择模型
+    if (!apiKey) {
       return;
     }
     setModel(modelName);
     setIsOpen(false);
   };
 
-  // 根据连接状态确定显示内容
-  const isConnected = status === 'connected';
+  // 根据 API Key 状态确定显示内容
+  const hasApiKey = !!apiKey;
   const hasModels = modelOptions.length > 0;
-  const displayText = isConnected 
+  const displayText = hasApiKey 
     ? (model || locale.placeholder)
-    : '未连接';
+    : '请先输入 API Key';
 
   return (
     <div style={{ ...styles.container }} className={className}>
@@ -184,11 +184,11 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ className, locale: localeOver
           <summary 
             style={{
               ...styles.summary,
-              cursor: isConnected ? 'pointer' : 'not-allowed',
-              opacity: isConnected ? 1 : 0.6
+              cursor: hasApiKey ? 'pointer' : 'not-allowed',
+              opacity: hasApiKey ? 1 : 0.6
             }}
             onMouseOver={(e) => {
-              if (isConnected) {
+              if (hasApiKey) {
                 e.currentTarget.style.backgroundColor = styles.summaryHover.backgroundColor;
               }
             }}
@@ -199,13 +199,13 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ className, locale: localeOver
             <div 
               style={{
                 ...styles.statusDot,
-                ...(isConnected ? styles.statusDotConnected : styles.statusDotDisconnected)
+                ...(hasApiKey ? styles.statusDotConnected : styles.statusDotDisconnected)
               }} 
-              title={isConnected ? '已连接' : '未连接'}
+              title={hasApiKey ? '可用' : '需要 API Key'}
             ></div>
             <span style={{
               ...styles.modelText,
-              color: isConnected ? '#E5E7EB' : '#9CA3AF'
+              color: hasApiKey ? '#E5E7EB' : '#9CA3AF'
             }}>{displayText}</span>
             <svg 
               style={{
@@ -220,7 +220,7 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ className, locale: localeOver
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
             </svg>
           </summary>
-          {isOpen && isConnected && (
+          {isOpen && hasApiKey && (
             <div 
               style={styles.dropdown}
               onLoad={(e) => {
@@ -230,7 +230,28 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ className, locale: localeOver
               }}
             >
                {!hasModels ? (
-                <div style={styles.emptyState}>{locale.empty}</div>
+                <div style={styles.emptyState}>
+                  <div>{locale.empty}</div>
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      fetchModels();
+                    }}
+                    style={{
+                      marginTop: '0.5rem',
+                      padding: '0.25rem 0.5rem',
+                      fontSize: '0.75rem',
+                      backgroundColor: '#374151',
+                      color: '#D1D5DB',
+                      border: 'none',
+                      borderRadius: '0.25rem',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {locale.fetchButton}
+                  </button>
+                </div>
               ) : (
                 <ul style={styles.dropdownList}>
                   {modelOptions.map((modelName) => (

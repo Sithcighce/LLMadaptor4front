@@ -26,7 +26,7 @@ export default ({ mode }) => {
     build: {
       lib: {
         entry: path.resolve(__dirname, "src/index.tsx"),
-        name: "rcb-plugin",
+        name: "llm-connector",
         fileName: "index",
         formats: ["es", "cjs"],
       },
@@ -37,7 +37,6 @@ export default ({ mode }) => {
           "react-dom/server",
           "react/jsx-runtime",
           "react/jsx-dev-runtime",
-          "react-chatbotify",
           "@mlc-ai/web-llm",
         ],
         output: {

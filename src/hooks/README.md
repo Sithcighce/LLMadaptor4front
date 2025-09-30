@@ -16,6 +16,40 @@
    - 只处理 API Key、Provider、Model 选择等连接相关逻辑
    - 不包含聊天、高级配置等业务逻辑
 
+### 📡 使用场景分析
+
+#### 场景1：纯"后端"调用 - 逻辑触发
+```typescript
+// 直接使用核心基础设施
+const { llmClient } = useLlmConnectorLogic();
+
+// 简单 API 调用
+const result = await llmClient.chat({
+  messages: [{ role: 'user', content: 'Hello' }],
+  stream: false
+});
+```
+**特点：**
+- ✅ 无需消息历史管理
+- ✅ 无需 UI 状态管理  
+- ✅ 直接使用 `llmClient.chat()` 即可
+- ✅ 可选择性使用工具函数辅助
+
+#### 场景2：聊天界面调用 - UI 交互
+```typescript
+// 需要完整的聊天管理功能
+const {
+  messages, isStreaming, sendMessage, 
+  clearMessages, abortResponse, error
+} = useChatManager(); // 待开发
+```
+**特点：**
+- 🎯 需要消息历史管理
+- 🎯 需要流式响应处理
+- 🎯 需要错误处理和恢复
+- 🎯 需要 UI 状态同步
+- 🎯 需要用户交互支持
+
 ## 🏗️ 当前架构
 
 ```
@@ -34,14 +68,24 @@
 
 当需要添加新功能时，请创建对应的专用 Hook：
 
-### 即将开发的功能模块：
+### 🎯 高优先级 - 即将开发：
 
-1. **useChatManager** - 聊天功能
+1. **useChatManager** - 聊天功能管理 ⭐⭐⭐⭐⭐
    ```typescript
    // 用于聊天界面组件
-   // 管理消息历史、发送消息、流式响应等
-   const { messages, sendMessage, isStreaming } = useChatManager();
+   // 整合已提取的工具函数：messageFormatter, streamProcessor, abortController 等
+   const { 
+     messages, sendMessage, isStreaming,
+     clearMessages, retryLastMessage, abortResponse,
+     error, tokenUsage 
+   } = useChatManager();
    ```
+   **基于现有工具函数构建：**
+   - ✅ `messageFormatter` - 消息格式转换
+   - ✅ `streamProcessor` - 流式响应处理
+   - ✅ `abortController` - 中断控制
+   - ✅ `errorHandler` - 错误处理
+   - ✅ `keyboardShortcuts` - 快捷键支持
 
 2. **useAdvancedSettings** - 高级参数配置
    ```typescript
@@ -96,20 +140,28 @@ export const useNewFeature = () => {
 
 ```
 🔥 Core Layer
-└── useLlmConnectorLogic
+└── useLlmConnectorLogic (llmClient 管理)
+
+🛠️ Utils Layer (已完成！)
+├── messageFormatter - 消息格式转换
+├── streamProcessor - 流式响应处理
+├── abortController - 中断控制
+├── errorHandler - 错误处理
+├── keyboardShortcuts - 快捷键支持
+└── 其他工具函数...
 
 🎯 Feature Layer  
 ├── useConnectionManager (✅ 已完成)
-├── useChatManager (📋 待开发)
+├── useChatManager (� 基于工具函数构建)
 ├── useAdvancedSettings (📋 待开发)  
 ├── useToolRegistry (📋 待开发)
 └── useRAGManager (📋 待开发)
 
 🎨 UI Layer
-├── 基础组件: ConnectionForm, ModelSelect, TokenUsage
-├── 聊天组件: ChatInterface, MessageBubble  
-├── 配置组件: SettingsPanel, ParameterSlider
-└── 高级组件: ToolManager, RAGConfig
+├── 基础组件: ConnectionForm, ModelSelect, TokenUsage (✅)
+├── 聊天组件: ChatInterface, MessageBubble (📋 待开发) 
+├── 配置组件: SettingsPanel, ParameterSlider (📋 待开发)
+└── 高级组件: ToolManager, RAGConfig (📋 待开发)
 ```
 
 ## 💡 开发者指南
@@ -156,7 +208,13 @@ const SettingsPanel = () => {
 > 
 > `useLlmConnectorLogic` 提供 `llmClient` 实例，其他所有 Hook 都基于这个实例来实现各自的功能。这确保了架构的一致性和可扩展性。
 
+## 📚 相关文档
+
+- 📋 [开发待办事项](./todo) - 详细的开发计划和优先级
+- 🎯 [使用场景分析](./USAGE_SCENARIOS.md) - 不同使用场景的路径选择指南
+- 🛠️ [工具函数提取报告](../../CHAT_UTILS_EXTRACTION.md) - 从RCB中提取的核心工具函数
+
 ---
 
 *最后更新：2025年9月30日*
-*版本：v1.0 - 基础架构完成*
+*版本：v1.1 - 增加使用场景分析*

@@ -109,7 +109,7 @@
     "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
   },
   "include": [
-    "src/**/*",
+    "src/**/*", "recyclebin/useConnectorController.ts", "recyclebin/useMessageHandler.ts", "recyclebin/promptHandler.tsx",
   ],
   "exclude": ["node_modules"],
 }
