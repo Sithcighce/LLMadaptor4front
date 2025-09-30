@@ -2,8 +2,16 @@
 
 ## ⚠️ 重要：避免状态管理陷阱
 
-### 问题描述
+### 问题1：状态实例分裂
 在使用 LLM Connector 时，容易出现状态实例分裂的问题，导致组件间状态不同步。
+
+### 问题2：多实例客户端绑定混乱 🚨 新发现
+在多实例场景下，开发者很容易忘记每个组件应该绑定哪个client，导致：
+- 🔴 **不直观** - 组件与client的绑定关系不明显
+- 🔴 **容易错误** - 开发者可能在错误的Provider下使用组件  
+- 🔴 **难以调试** - 当出现问题时很难快速定位是哪个client的问题
+
+> 📋 **详细分析**：参见 [多实例客户端绑定问题](../经验教训/多实例客户端绑定问题.md)
 
 ### ❌ 错误用法 - 会导致状态分裂
 ```tsx
@@ -17,6 +25,8 @@ const BadComponent = () => {
 ```
 
 ### ✅ 正确用法 - 使用公共接口
+
+#### 单实例场景
 ```tsx
 // 方法1：连接管理
 import { useConnectionManager } from '../hooks/useConnectionManager';
@@ -35,7 +45,75 @@ const FullFeaturedComponent = () => {
 };
 ```
 
+#### 多实例场景 - 通过名字管理 🎯 **推荐方案**
+```tsx
+// 不同功能区域使用不同命名的实例
+function App() {
+  return (
+    <div>
+      {/* 总结助手实例 */}
+      <LlmConnectorProvider name="summary" storageKey="summary-config">
+        <div className="summary-section">
+          <h3>📄 总结助手 (经济模式)</h3>
+          <ConnectionFormZh />
+          <SummaryInterface />
+        </div>
+      </LlmConnectorProvider>
+      
+      {/* 对话助手实例 */}
+      <LlmConnectorProvider name="chat" storageKey="chat-config">
+        <div className="chat-section">
+          <h3>💬 对话助手 (高质量模式)</h3>
+          <ConnectionFormZh />
+          <ChatInterface />
+        </div>
+      </LlmConnectorProvider>
+      
+      {/* 翻译助手实例 */}
+      <LlmConnectorProvider name="translate" storageKey="translate-config">
+        <div className="translate-section">
+          <h3>🌐 翻译助手 (多语言)</h3>
+          <ConnectionFormZh />
+          <TranslateInterface />
+        </div>
+      </LlmConnectorProvider>
+    </div>
+  );
+}
+
+// 组件内部可以清楚知道使用的是哪个实例
+const SummaryInterface = () => {
+  const { llmClient, instanceName } = useLlmConnector();
+  
+  console.log(`当前使用的实例: ${instanceName}`); // 输出: "summary"
+  
+  const handleSummarize = async (text: string) => {
+    if (!llmClient) {
+      console.error(`${instanceName} 实例未连接`);
+      return;
+    }
+    
+    const result = await llmClient.chat({
+      messages: [{ role: 'user', content: `请总结：${text}` }]
+    });
+    
+    return result.text;
+  };
+  
+  return (
+    <div data-instance={instanceName}>
+      <div className="instance-indicator">
+        ✅ 使用实例: {instanceName}
+      </div>
+      {/* 总结功能UI */}
+    </div>
+  );
+};
+```
+
 ### 🏗️ 状态管理架构说明
+
+#### 单实例架构
 ```
 App.tsx
 ├── LlmConnectorProvider (状态容器)
@@ -45,6 +123,30 @@ App.tsx
 │   ├── useConnectionManager() ✅ 通过 Context 访问
 │   └── useLlmConnector() ✅ 通过 Context 访问
 ```
+
+#### 多实例架构 - 命名管理 🆕
+```
+App.tsx
+├── LlmConnectorProvider (name="summary")
+│   ├── useLlmConnectorLogic() → summary 状态实例
+│   └── SummaryInterface
+│       └── useLlmConnector() → 获取 "summary" 实例
+│
+├── LlmConnectorProvider (name="chat") 
+│   ├── useLlmConnectorLogic() → chat 状态实例
+│   └── ChatInterface
+│       └── useLlmConnector() → 获取 "chat" 实例
+│
+└── LlmConnectorProvider (name="translate")
+    ├── useLlmConnectorLogic() → translate 状态实例
+    └── TranslateInterface
+        └── useLlmConnector() → 获取 "translate" 实例
+```
+
+**核心优势**：
+- ✅ **清晰绑定** - 每个组件明确知道使用哪个实例
+- ✅ **独立配置** - 不同实例有独立的配置和存储
+- ✅ **调试友好** - 通过name可以快速定位问题
 
 ### Hook 职责分工
 - **`useLlmConnectorLogic`** ⚠️ 内部实现，仅供 Provider 使用
