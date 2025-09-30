@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useConnectionManager } from '../../hooks/useConnectionManager';
 import type { ModelSelectLocale } from './types';
 
@@ -143,6 +143,32 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ className, locale: localeOver
     }
   }, [model]);
 
+  // 点击外部关闭下拉
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isOpen) {
+        const target = event.target as Element;
+        const dropdown = document.querySelector('[data-modelselect-dropdown]');
+        const summary = document.querySelector('[data-modelselect-summary]');
+        
+        if (dropdown && summary && 
+            !dropdown.contains(target) && 
+            !summary.contains(target)) {
+          // 点击外部时，如果有未保存的更改则提交
+          if (selectedModel !== model) {
+            setModel(selectedModel);
+          }
+          setIsOpen(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen, selectedModel, model, setModel]);
+
   // 监听连接状态变化，确保组件及时更新
   useEffect(() => {
     console.log('ModelSelect status changed:', { status, modelOptionsCount: modelOptions.length });
@@ -159,7 +185,7 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ className, locale: localeOver
 
   const locale = { ...defaultLocale, ...localeOverride };
 
-  const handleToggle = () => {
+  const handleToggle = useCallback(() => {
     // 只要连接成功就允许操作
     if (status !== 'connected') {
       return;
@@ -167,20 +193,18 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ className, locale: localeOver
     
     // 如果要打开下拉且没有模型列表，尝试获取
     if (!isOpen && modelOptions.length === 0) {
-      console.log('Triggering fetchModels from ModelSelect');
       fetchModels();
     }
     
     // 如果要关闭下拉，且本地选择与全局不同，则提交更改
     if (isOpen && selectedModel !== model) {
-      console.log('Committing model change:', { from: model, to: selectedModel });
-      setModel(selectedModel); // 🔥 延迟提交：关闭时才提交到全局状态
+      setModel(selectedModel); // 🔥 延迼提交：关闭时才提交到全局状态
     }
     
     setIsOpen((prev) => !prev);
-  };
+  }, [status, isOpen, modelOptions.length, selectedModel, model, fetchModels, setModel]);
 
-  const handleSelect = (modelName: string) => {
+  const handleSelect = useCallback((modelName: string) => {
     // 只有在连接成功时才允许选择模型
     if (status !== 'connected') {
       return;
@@ -188,7 +212,7 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ className, locale: localeOver
     // 🔥 关键修复：只更新本地状态，不立即提交到全局
     setSelectedModel(modelName);
     // 注意：不关闭下拉，让用户可以继续选择或点击外部关闭
-  };
+  }, [status]);
 
   // 简化逻辑：只要连接成功就可用
   const isConnected = status === 'connected';
@@ -201,10 +225,8 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ className, locale: localeOver
     if (status === 'connecting') return '连接中...';
     if (!isConnected) return '请先连接';
     if (isConnected && !hasModels) return '加载模型中...'; // 连接成功但模型还没加载完
-    // 🔥 显示本地选择的模型，如果与全局不同则加上 * 标记
-    const displayModel = selectedModel || model || locale.placeholder;
-    const hasUnsavedChanges = selectedModel && selectedModel !== model;
-    return hasUnsavedChanges ? `${displayModel} *` : displayModel;
+    // 显示本地选择的模型
+    return selectedModel || model || locale.placeholder;
   };
   
   const displayText = getDisplayText();
@@ -240,15 +262,18 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ className, locale: localeOver
 
 
       <div style={styles.card}>
-        <details style={styles.details} open={isOpen} onToggle={(e) => {
-          e.preventDefault();
-          handleToggle();
-        }}>
+        <details style={styles.details} open={isOpen}>
           <summary 
+            data-modelselect-summary
             style={{
               ...styles.summary,
               cursor: isAvailable ? 'pointer' : 'not-allowed',
               opacity: isAvailable ? 1 : 0.6
+            }}
+            onClick={(e) => {
+              e.preventDefault(); // 阻止原生 details 行为
+              e.stopPropagation(); // 阻止事件冒泡
+              handleToggle();
             }}
             onMouseOver={(e) => {
               if (isAvailable) {
@@ -288,6 +313,7 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ className, locale: localeOver
           </summary>
           {isOpen && isAvailable && (
             <div 
+              data-modelselect-dropdown
               style={styles.dropdown}
               onLoad={(e) => {
                 // 隐藏滚动条的额外样式

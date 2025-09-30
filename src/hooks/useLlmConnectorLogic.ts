@@ -180,7 +180,6 @@ export const useLlmConnectorLogic = () => {
   useEffect(() => {
     // 当模型列表变化且当前模型不在列表中时，设置第一个模型为默认
     if (modelOptions.length > 0 && !modelOptions.includes(model)) {
-      console.log('Setting default model:', { currentModel: model, newModel: modelOptions[0] });
       setModel(modelOptions[0]);
     }
   }, [modelOptions, model, setModel]);
