@@ -1,20 +1,31 @@
-import { useLlmConnectorLogic } from './useLlmConnectorLogic';
+import { useLlmConnector } from './useLlmConnector';
 
 /**
- * 连接管理专用 Hook
+ * ✅ 连接管理专用 Hook - 推荐的公共接口
  * 
  * 专门服务于基础连接组件：ConnectionForm, ModelSelect, TokenUsage
  * 只暴露连接相关的状态和方法，不包含聊天、高级配置等业务逻辑
+ * 
+ * 使用示例：
+ * ```tsx
+ * const MyComponent = () => {
+ *   const { status, apiKey, handleConnect } = useConnectionManager();
+ *   return <button onClick={handleConnect}>连接</button>;
+ * };
+ * ```
  * 
  * 职责范围：
  * - API Key 和 Provider 配置
  * - 模型选择和获取
  * - 连接状态管理
  * - Token 使用量监控
+ * 
+ * @public 推荐的外部使用方式
+ * @requires LlmConnectorProvider 确保在 Provider 包裹下使用
  */
 export const useConnectionManager = () => {
-  // 从核心 Hook 获取所有功能
-  const { states, handlers } = useLlmConnectorLogic();
+  // 🔥 修复：使用 Context 中的共享状态，而不是创建新实例
+  const { states, handlers } = useLlmConnector();
 
   return {
     // 🔧 连接配置状态

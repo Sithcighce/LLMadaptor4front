@@ -1,5 +1,58 @@
 # Hooks 架构设计文档
 
+## ⚠️ 重要：避免状态管理陷阱
+
+### 问题描述
+在使用 LLM Connector 时，容易出现状态实例分裂的问题，导致组件间状态不同步。
+
+### ❌ 错误用法 - 会导致状态分裂
+```tsx
+// 危险：直接使用内部 Hook
+import { useLlmConnectorLogic } from '../hooks/useLlmConnectorLogic';
+
+const BadComponent = () => {
+  const logic = useLlmConnectorLogic(); // 创建独立状态实例！
+  // 这会导致状态不同步问题
+};
+```
+
+### ✅ 正确用法 - 使用公共接口
+```tsx
+// 方法1：连接管理
+import { useConnectionManager } from '../hooks/useConnectionManager';
+
+const ConnectionComponent = () => {
+  const { status, apiKey, handleConnect } = useConnectionManager();
+  return <button onClick={handleConnect}>连接</button>;
+};
+
+// 方法2：完整功能访问
+import { useLlmConnector } from '../hooks/useLlmConnector';
+
+const FullFeaturedComponent = () => {
+  const { llmClient, states, handlers } = useLlmConnector();
+  return <div>完整的功能界面</div>;
+};
+```
+
+### 🏗️ 状态管理架构说明
+```
+App.tsx
+├── LlmConnectorProvider (状态容器)
+│   └── useLlmConnectorLogic() → 唯一状态实例
+│
+├── 你的组件
+│   ├── useConnectionManager() ✅ 通过 Context 访问
+│   └── useLlmConnector() ✅ 通过 Context 访问
+```
+
+### Hook 职责分工
+- **`useLlmConnectorLogic`** ⚠️ 内部实现，仅供 Provider 使用
+- **`useLlmConnector`** ✅ 完整功能访问的公共接口
+- **`useConnectionManager`** ✅ 连接管理的专用接口
+
+---
+
 ## 🎯 设计原则
 
 ### 为什么这样划分？

@@ -1,4 +1,12 @@
-<p align="center">
+<p align="cen`LLM Connector` 是一个 React 库，旨在解决前端应用中"用户自带 API Key"的问题。它提供了一个强大的逻辑核心和一套美观、独立的 UI 组件，让你的用户可以安全、便捷地连接上百个 LLM 服务商，无需任何后端支持。
+
+## ⚠️ 开发者注意
+
+在使用此库时，请务必阅读 [Hooks 架构设计文档](./src/hooks/README.md) 以避免常见的状态管理陷阱。
+
+**重要**：不要直接使用 `useLlmConnectorLogic`，请使用 `useConnectionManager` 或 `useLlmConnector`。
+
+## 我们解决的问题">
   <img width="200px" src="https://raw.githubusercontent.com/Sithcighce/LLMadaptor4front/main/src/assets/logo.webp" />
   <h1 align="center">LLM Connector</h1>
 </p>

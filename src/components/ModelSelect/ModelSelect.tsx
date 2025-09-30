@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useConnectionManager } from '../../hooks/useConnectionManager';
 import type { ModelSelectLocale } from './types';
 
@@ -133,6 +133,11 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ className, locale: localeOver
   } = useConnectionManager();
   const [isOpen, setIsOpen] = useState(false);
 
+  // 监听连接状态变化，确保组件及时更新
+  useEffect(() => {
+    console.log('ModelSelect status changed:', { status, modelOptionsCount: modelOptions.length });
+  }, [status, modelOptions.length]);
+
   // Default locale setup
   const defaultLocale: ModelSelectLocale = {
     title: '1. Model Selector',
@@ -145,37 +150,83 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ className, locale: localeOver
   const locale = { ...defaultLocale, ...localeOverride };
 
   const handleToggle = () => {
-    // 只要有 API Key 就允许操作
-    if (!apiKey) {
+    // 只要连接成功就允许操作
+    if (status !== 'connected') {
       return;
     }
     
-    // 如果模型列表为空且有API密钥，则获取模型列表
-    if (modelOptions.length === 0 && apiKey) {
+    // 如果没有模型列表，尝试获取
+    if (modelOptions.length === 0) {
+      console.log('Triggering fetchModels from ModelSelect');
       fetchModels();
     }
+    
     setIsOpen((prev) => !prev);
   };
 
   const handleSelect = (modelName: string) => {
-    // 只要有 API Key 就允许选择模型
-    if (!apiKey) {
+    // 只有在连接成功时才允许选择模型
+    if (status !== 'connected') {
       return;
     }
     setModel(modelName);
     setIsOpen(false);
   };
 
-  // 根据 API Key 状态确定显示内容
-  const hasApiKey = !!apiKey;
+  // 简化逻辑：只要连接成功就可用
+  const isConnected = status === 'connected';
   const hasModels = modelOptions.length > 0;
-  const displayText = hasApiKey 
-    ? (model || locale.placeholder)
-    : '请先输入 API Key';
+  const isAvailable = isConnected; // 连接成功就可用，不管模型列表
+  
+  // 调试日志
+  console.log('ModelSelect Debug:', {
+    status,
+    isConnected,
+    modelOptions: modelOptions.length,
+    hasModels,
+    isAvailable,
+    model
+  });
+  
+  const getDisplayText = () => {
+    if (status === 'connecting') return '连接中...';
+    if (!isConnected) return '请先连接';
+    if (isConnected && !hasModels) return '加载模型中...'; // 连接成功但模型还没加载完
+    return model || locale.placeholder;
+  };
+  
+  const displayText = getDisplayText();
 
   return (
     <div style={{ ...styles.container }} className={className}>
       <h2 style={styles.title}>{locale.title}</h2>
+      
+      {/* 🐛 调试界面 - 已注释，如需调试请取消注释 */}
+      {/* <div style={{
+        padding: '0.5rem',
+        backgroundColor: '#0F172A',
+        border: '1px solid #334155',
+        borderRadius: '0.25rem',
+        fontSize: '0.75rem',
+        fontFamily: 'monospace',
+        color: '#94A3B8',
+        marginBottom: '0.5rem'
+      }}>
+        <div><strong>🐛 ModelSelect Debug:</strong></div>
+        <div>status: <span style={{color: status === 'connected' ? '#10B981' : '#EF4444'}}>{status}</span></div>
+        <div>apiKey: {apiKey ? `${apiKey.slice(0, 10)}...` : 'null'}</div>
+        <div>model: <span style={{color: '#60A5FA'}}>{model || 'null'}</span></div>
+        <div>modelOptions.length: <span style={{color: '#F59E0B'}}>{modelOptions.length}</span></div>
+        <div>isAvailable: <span style={{color: isAvailable ? '#10B981' : '#EF4444'}}>{isAvailable.toString()}</span></div>
+        <div>displayText: "{displayText}"</div>
+        {modelOptions.length > 0 && (
+          <div>models: {modelOptions.slice(0, 3).join(', ')}{modelOptions.length > 3 ? '...' : ''}</div>
+        )}
+      </div> */}
+
+
+
+      
       <div style={styles.card}>
         <details style={styles.details} open={isOpen} onToggle={(e) => {
           e.preventDefault();
@@ -184,11 +235,11 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ className, locale: localeOver
           <summary 
             style={{
               ...styles.summary,
-              cursor: hasApiKey ? 'pointer' : 'not-allowed',
-              opacity: hasApiKey ? 1 : 0.6
+              cursor: isAvailable ? 'pointer' : 'not-allowed',
+              opacity: isAvailable ? 1 : 0.6
             }}
             onMouseOver={(e) => {
-              if (hasApiKey) {
+              if (isAvailable) {
                 e.currentTarget.style.backgroundColor = styles.summaryHover.backgroundColor;
               }
             }}
@@ -199,13 +250,16 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ className, locale: localeOver
             <div 
               style={{
                 ...styles.statusDot,
-                ...(hasApiKey ? styles.statusDotConnected : styles.statusDotDisconnected)
+                ...(isAvailable ? styles.statusDotConnected : styles.statusDotDisconnected)
               }} 
-              title={hasApiKey ? '可用' : '需要 API Key'}
+              title={isAvailable ? '可用' : (
+                status === 'connecting' ? '连接中' : 
+                !isConnected ? '未连接' : '没有模型'
+              )}
             ></div>
             <span style={{
               ...styles.modelText,
-              color: hasApiKey ? '#E5E7EB' : '#9CA3AF'
+              color: isAvailable ? '#E5E7EB' : '#9CA3AF'
             }}>{displayText}</span>
             <svg 
               style={{
@@ -220,7 +274,7 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ className, locale: localeOver
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
             </svg>
           </summary>
-          {isOpen && hasApiKey && (
+          {isOpen && isAvailable && (
             <div 
               style={styles.dropdown}
               onLoad={(e) => {

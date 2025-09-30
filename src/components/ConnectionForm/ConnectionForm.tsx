@@ -194,7 +194,7 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({ className, locale: loca
             >
               <option value="openai">OpenAI</option>
               <option value="anthropic">Anthropic</option>
-              <option value="google">Google</option>
+              <option value="gemini">Google Gemini</option>
             </select>
           </div>
 
@@ -212,6 +212,20 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({ className, locale: loca
               }}
             />
           </div>
+
+          {/* 错误信息显示 */}
+          {error && (
+            <div style={{
+              padding: '0.75rem',
+              backgroundColor: '#7F1D1D', /* bg-red-900 */
+              border: '1px solid #DC2626', /* border-red-600 */
+              borderRadius: '0.375rem',
+              fontSize: '0.875rem',
+              color: '#FEF2F2', /* text-red-50 */
+            }}>
+              <strong>连接失败：</strong> {error.message}
+            </div>
+          )}
 
           <div style={styles.buttonContainer}>
             {isConnected ? (
