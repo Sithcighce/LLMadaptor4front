@@ -1,5 +1,6 @@
 // --- Main Provider & Context Hook --- //
-import { LlmConnectorProvider, useLlmConnector } from './providers/LlmConnectorProvider';
+import { LlmConnectorProvider } from './providers/LlmConnectorProvider';
+import { useLlmConnector } from './hooks/useLlmConnector';
 
 // --- UI Components --- //
 import { ConnectionFormEn } from './components/ConnectionForm/index.en';
@@ -12,10 +13,13 @@ import { TokenUsageZh } from './components/TokenUsage/index.zh';
 // --- Logic Hook for Advanced Usage --- //
 import { useLlmConnectorLogic } from './hooks/useLlmConnectorLogic';
 
+// --- Client Registry --- //
+import { ClientRegistry } from './registry/ClientRegistry';
+
 // --- Client & Types --- //
 import { LlmClient } from './client/LlmClient';
 import type { ChatMessage } from './types/ChatMessage';
-import type { ChatRequest, ChatResult, StreamingChatResult, StreamChunk } from './types';
+import type { ChatRequest } from './types';
 
 // --- Export all public-facing parts --- //
 export {
@@ -23,6 +27,9 @@ export {
   LlmConnectorProvider,
   useLlmConnector,
   useLlmConnectorLogic,
+  
+  // Client Registry
+  ClientRegistry,
 
   // UI Components
   ConnectionFormEn,
@@ -38,9 +45,7 @@ export {
 
 // --- Export all public types --- //
 export type {
+  // Types
   ChatMessage,
   ChatRequest,
-  ChatResult,
-  StreamingChatResult,
-  StreamChunk,
 };

@@ -1,5 +1,10 @@
 import React, { FormEvent, useCallback, useState } from 'react';
 import './App.css';
+import { ComprehensiveTest } from './test/ComprehensiveTest';
+import { RegistrationTest } from './test/RegistrationTest';
+import { SimpleTest } from './test/SimpleTest';
+import { MultiInstanceTest } from './test/MultiInstanceTest';
+import { ClientNamingTest } from './test/ClientNamingTest';
 import { LlmConnectorProvider } from './providers/LlmConnectorProvider';
 import { useLlmConnector } from './hooks/useLlmConnector';
 import { ConnectionFormZh } from './components/ConnectionForm/index.zh';
@@ -110,7 +115,12 @@ const ChatPanel = () => {
 
 // The main App component that lays out the playground
 const App = () => {
-  // 容器样式，对应 UIdemo 的 w-full max-w-md mx-auto p-4 space-y-12
+  // 在开发阶段，显示客户端命名测试页面
+  if (process.env.NODE_ENV === 'development') {
+    return <ClientNamingTest />;
+  }
+
+  // 生产环境显示原有的UI演示
   const containerStyle = {
     width: '100%',
     maxWidth: '28rem', /* max-w-md = 448px */

@@ -19,4 +19,6 @@ export interface ModelSelectLocale {
 export interface ModelSelectProps {
   className?: string;
   locale?: ModelSelectLocale;
+  /** 可选的Client名称，用于显式查找Client实例 */
+  clientName?: string;
 }

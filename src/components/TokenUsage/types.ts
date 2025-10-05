@@ -16,4 +16,6 @@ export interface TokenUsageLocale {
 export interface TokenUsageProps {
   className?: string;
   locale?: TokenUsageLocale;
+  /** 可选的Client名称，用于显式查找Client实例 */
+  clientName?: string;
 }

@@ -125,14 +125,16 @@ const styles = {
 interface ConnectionFormProps {
   className?: string;
   locale?: Partial<ConnectionFormLocale>;
+  /** 可选的Client名称，用于显式查找Client实例 */
+  clientName?: string;
 }
 
-const ConnectionForm: React.FC<ConnectionFormProps> = ({ className, locale: localeOverride }) => {
+const ConnectionForm: React.FC<ConnectionFormProps> = ({ className, locale: localeOverride, clientName }) => {
   // Consume the logic from the connection manager
   const {
     providerId, apiKey, status, error,
     setProviderId, setApiKey, handleConnect, handleDisconnect
-  } = useConnectionManager();
+  } = useConnectionManager(clientName);
 
   // Locale setup is now internal, but can be overridden by props
   const defaultLocale: ConnectionFormLocale = {

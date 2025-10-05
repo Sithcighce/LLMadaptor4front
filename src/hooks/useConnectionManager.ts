@@ -7,10 +7,19 @@ import { useLlmConnector } from './useLlmConnector';
  * 专门服务于基础连接组件：ConnectionForm, ModelSelect, TokenUsage
  * 只暴露连接相关的状态和方法，不包含聊天、高级配置等业务逻辑
  * 
+ * @param clientName - 可选的Client名称，用于显式查找指定的Client实例
+ * 
  * 使用示例：
  * ```tsx
+ * // Context模式
  * const MyComponent = () => {
  *   const { status, apiKey, handleConnect } = useConnectionManager();
+ *   return <button onClick={handleConnect}>连接</button>;
+ * };
+ * 
+ * // 显式指定Client名称
+ * const MyComponent = () => {
+ *   const { status, apiKey, handleConnect } = useConnectionManager('chat');
  *   return <button onClick={handleConnect}>连接</button>;
  * };
  * ```
@@ -22,11 +31,11 @@ import { useLlmConnector } from './useLlmConnector';
  * - Token 使用量监控
  * 
  * @public 推荐的外部使用方式
- * @requires LlmConnectorProvider 确保在 Provider 包裹下使用
+ * @requires LlmConnectorProvider 确保在 Provider 包裹下使用（Context模式）
  */
-export const useConnectionManager = () => {
-  // 🔥 修复：使用 Context 中的共享状态，而不是创建新实例
-  const { states, handlers } = useLlmConnector();
+export const useConnectionManager = (clientName?: string) => {
+  // 🔥 修复：使用 Context 中的共享状态，或显式查找指定Client
+  const { states, handlers } = useLlmConnector(clientName);
 
   // 🔥 关键修复：用 useMemo 稳定返回对象的引用
   return useMemo(() => ({

@@ -24,4 +24,6 @@ export interface ConnectionFormLocale {
 export interface ConnectionFormProps {
   className?: string;
   locale?: ConnectionFormLocale;
+  /** 可选的Client名称，用于显式查找Client实例 */
+  clientName?: string;
 }

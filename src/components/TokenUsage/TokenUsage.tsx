@@ -40,10 +40,12 @@ const styles = {
 interface TokenUsageProps {
   className?: string;
   locale?: Partial<TokenUsageLocale>;
+  /** 可选的Client名称，用于显式查找Client实例 */
+  clientName?: string;
 }
 
-const TokenUsage: React.FC<TokenUsageProps> = ({ className, locale: localeOverride }) => {
-  const { tokenUsage } = useConnectionManager();
+const TokenUsage: React.FC<TokenUsageProps> = ({ className, locale: localeOverride, clientName }) => {
+  const { tokenUsage } = useConnectionManager(clientName);
 
   // Default locale setup
   const defaultLocale: TokenUsageLocale = {
@@ -64,14 +66,14 @@ const TokenUsage: React.FC<TokenUsageProps> = ({ className, locale: localeOverri
         <div>
           <div style={styles.label}>{locale.inputLabel}</div>
           <div style={styles.value}>
-            {tokenUsage ? formatNumber(tokenUsage.input) : '-'}
+            {tokenUsage ? formatNumber(tokenUsage.inputTokens) : '-'}
           </div>
         </div>
         <div style={styles.divider}></div>
         <div>
           <div style={styles.label}>{locale.outputLabel}</div>
           <div style={styles.value}>
-            {tokenUsage ? formatNumber(tokenUsage.output) : '-'}
+            {tokenUsage ? formatNumber(tokenUsage.outputTokens) : '-'}
           </div>
         </div>
       </div>

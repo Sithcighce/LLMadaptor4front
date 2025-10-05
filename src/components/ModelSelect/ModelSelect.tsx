@@ -124,13 +124,15 @@ const styles = {
 interface ModelSelectProps {
   className?: string;
   locale?: Partial<ModelSelectLocale>;
+  /** 可选的Client名称，用于显式查找Client实例 */
+  clientName?: string;
 }
 
-const ModelSelect: React.FC<ModelSelectProps> = ({ className, locale: localeOverride }) => {
+const ModelSelect: React.FC<ModelSelectProps> = ({ className, locale: localeOverride, clientName }) => {
   const {
     model, modelOptions, apiKey, status,
     setModel, fetchModels
-  } = useConnectionManager();
+  } = useConnectionManager(clientName);
   
   // 🔥 关键修复：使用本地状态管理选择，延迟提交到全局状态
   const [selectedModel, setSelectedModel] = useState(model); // 本地选择状态

@@ -150,6 +150,46 @@ Each component comes in an English (`...En`) and Chinese (`...Zh`) version. They
 
 -   **`LlmClient`**: The standardized client object returned by the hook after a successful connection. Its main method is `chat(request)`.
 
+## 🌟 Technical Innovation
+
+### Explicit Client Naming System
+LLM Connector introduces a breakthrough solution to React Context reliability issues:
+
+```tsx
+// Traditional Context mode - relies on "nearest parent"
+const { llmClient } = useLlmConnector();
+
+// Explicit naming mode - direct client specification
+const { llmClient } = useLlmConnector('chat-client');
+```
+
+**Key Benefits:**
+- ✅ **Deterministic binding** - No more "which Provider am I connected to?" confusion
+- ✅ **Cross-component tree access** - Access named clients from anywhere
+- ✅ **Configuration isolation** - Each instance has independent storage
+- ✅ **Developer-friendly** - Clear error messages and debugging support
+
+### Multi-Instance Support
+Perfect for applications with different cost/performance requirements:
+
+```tsx
+// Chat with premium model
+<LlmConnectorProvider name="chat" storageKey="chat-config">
+  <ChatInterface />
+</LlmConnectorProvider>
+
+// Summary with economy model  
+<LlmConnectorProvider name="summary" storageKey="summary-config">
+  <SummaryInterface />
+</LlmConnectorProvider>
+
+// Access both from anywhere
+function CrossComponentAccess() {
+  const { llmClient: chatClient } = useLlmConnector('chat');
+  const { llmClient: summaryClient } = useLlmConnector('summary');
+}
+```
+
 ## Known Issues
 
 ### UI Alignment with Demo
