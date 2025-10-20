@@ -34,20 +34,26 @@ export const LlmConnectorProvider: React.FC<LlmConnectorProviderProps> = ({
   const logicRef = useRef(logic);
   logicRef.current = logic;
   
-  // 注册到全局Client注册中心
-  // 只在组件挂载时注册一次，避免因 logic 引用变化导致重复注册
-  useEffect(() => {
-    console.log(`[LlmConnectorProvider] Registering client: "${name}"`);
-    
-    // 注册时使用一个函数来获取最新的 logic
+  // Ensure the client is registered synchronously during render so
+  // child components that call useLlmConnector(name) during their
+  // render won't fail due to registration happening only in an effect.
+  // We still keep effects for cleanup and updates.
+  try {
     ClientRegistry.register(name, logicRef.current);
-    
-    // 返回清理函数，只在组件卸载时执行
+  } catch (e) {
+    // Defensive: registration should be idempotent; swallow any unexpected errors
+    // to avoid breaking the render path.
+    // eslint-disable-next-line no-console
+    console.warn('[LlmConnectorProvider] synchronous register warning', e);
+  }
+  
+  // 注册表卸载清理：组件卸载时注销
+  useEffect(() => {
     return () => {
       console.log(`[LlmConnectorProvider] Unregistering client: "${name}"`);
       ClientRegistry.unregister(name);
     };
-  }, [name]); // 只依赖 name
+  }, [name]);
   
   // 每当 logic 更新时，更新注册表中的引用
   useEffect(() => {
