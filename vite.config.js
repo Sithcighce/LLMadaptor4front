@@ -8,9 +8,50 @@ import { defineConfig  } from "vite";
 
 export default ({ mode }) => {
   
+  // Determine if we're building for demo or library
+  const isDemoMode = mode === 'demo';
+  
+  // Library build configuration (for npm package)
+  const libBuildConfig = {
+    lib: {
+      entry: path.resolve(__dirname, "src/index.tsx"),
+      name: "llm-connector",
+      fileName: "index",
+      formats: ["es", "cjs"],
+    },
+    rollupOptions: {
+      external: [
+        "react",
+        "react-dom",
+        "react-dom/server",
+        "react/jsx-runtime",
+        "react/jsx-dev-runtime",
+        "@mlc-ai/web-llm",
+      ],
+      output: {
+        globals: {
+          react: "React",
+        }
+      },
+    },
+    outDir: "../dist",
+    assetsInclude: ['**/*.wasm'],
+  };
+
+  // Demo/Preview build configuration (for Vercel deployment)
+  const demoBuildConfig = {
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, "src/index.html"),
+      },
+    },
+    outDir: "../dist",
+    assetsInclude: ['**/*.wasm'],
+  };
+
   return defineConfig({
     root: "src",
-    publicDir: mode === 'development' ? '../public' : false,
+    publicDir: '../public',
     server: {
       headers: {
         'Cross-Origin-Opener-Policy': 'same-origin',
@@ -23,31 +64,7 @@ export default ({ mode }) => {
         'Cross-Origin-Embedder-Policy': 'require-corp',
       },
     },
-    build: {
-      lib: {
-        entry: path.resolve(__dirname, "src/index.tsx"),
-        name: "llm-connector",
-        fileName: "index",
-        formats: ["es", "cjs"],
-      },
-      rollupOptions: {
-        external: [
-          "react",
-          "react-dom",
-          "react-dom/server",
-          "react/jsx-runtime",
-          "react/jsx-dev-runtime",
-          "@mlc-ai/web-llm",
-        ],
-        output: {
-          globals: {
-            react: "React",
-          }
-        },
-      },
-      outDir: "../dist",
-      assetsInclude: ['**/*.wasm'],
-    },
+    build: isDemoMode ? demoBuildConfig : libBuildConfig,
     css: {
       postcss: {
         plugins: [
