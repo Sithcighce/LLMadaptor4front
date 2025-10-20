@@ -25,7 +25,13 @@ const openai = new OpenaiProvider({
 });
 ```
 
-> **⚠️ 注意**：生产环境中不建议使用直连模式，API Key 将暴露在浏览器端。推荐使用 `proxy` 模式，由自己控制的后端保存密钥。可以参考轻量级的 [示例代理项目](https://github.com/tjtanjin/llm-proxy)。
+> **💡 三种推理模式**：本库支持三种同等重要的推理模式：
+>
+> 1. **前端 BYOK** - 用户在前端粘贴自己的 API Key,存储在浏览器 localStorage
+> 2. **端侧推理** - Chrome AI、WebLLM 等浏览器端推理,无需 API Key
+> 3. **后端代理** - Backend Proxy、LM Studio 等后端统一管理
+>
+> OpenAI Provider 支持模式 1 和模式 3。用户根据场景选择合适的模式。
 
 ---
 

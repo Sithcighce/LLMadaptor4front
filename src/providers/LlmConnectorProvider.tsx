@@ -1,5 +1,5 @@
 
-import React, { ReactNode, useEffect } from 'react';
+import React, { ReactNode, useEffect, useRef } from 'react';
 import { useLlmConnectorLogic } from '../hooks/useLlmConnectorLogic';
 import { LlmConnectorContext } from '../contexts/LlmConnectorContext';
 import { ClientRegistry } from '../registry/ClientRegistry';
@@ -30,14 +30,29 @@ export const LlmConnectorProvider: React.FC<LlmConnectorProviderProps> = ({
   const finalStorageKey = storageKey || `llm-connector-${name}`;
   const logic = useLlmConnectorLogic(finalStorageKey);
   
+  // 使用 ref 存储 logic 的最新引用
+  const logicRef = useRef(logic);
+  logicRef.current = logic;
+  
   // 注册到全局Client注册中心
+  // 只在组件挂载时注册一次，避免因 logic 引用变化导致重复注册
   useEffect(() => {
-    ClientRegistry.register(name, logic);
+    console.log(`[LlmConnectorProvider] Registering client: "${name}"`);
     
-    // 返回清理函数
+    // 注册时使用一个函数来获取最新的 logic
+    ClientRegistry.register(name, logicRef.current);
+    
+    // 返回清理函数，只在组件卸载时执行
     return () => {
+      console.log(`[LlmConnectorProvider] Unregistering client: "${name}"`);
       ClientRegistry.unregister(name);
     };
+  }, [name]); // 只依赖 name
+  
+  // 每当 logic 更新时，更新注册表中的引用
+  useEffect(() => {
+    console.log(`[LlmConnectorProvider] Updating client logic: "${name}"`);
+    ClientRegistry.register(name, logicRef.current);
   }, [name, logic]);
 
   return (

@@ -1,19 +1,103 @@
-# LLM Connector 文档中心
+# 📚 项目文档# 📚 LLM Connector 文档中心
 
-## � 文档导航
+
+
+## 🔥 核心文档（必读）## 🔥 必读文档
+
+
+
+1. **[HANDOVER.md](./HANDOVER.md)** - 项目交接文档### [HANDOVER.md](./HANDOVER.md) ⭐
+
+   - 当前状态和已知问题**项目交接文档** - 当前状态、关键问题、下一步行动
+
+   - 环境配置和调试方法
+
+   - 下一步行动指南### [TASKS.md](./TASKS.md)
+
+**开发任务清单** - 待办任务和优先级
+
+2. **[TASKS.md](./TASKS.md)** - 开发任务清单
+
+   - 优先级排序的待办任务### [AI-Adapter-Architecture.md](./AI-Adapter-Architecture.md)
+
+   - 已完成和未完成功能**架构设计** - 整体架构和技术选型
+
+   - 进度跟踪
+
+### [AI-Adapter-Implementation.md](./AI-Adapter-Implementation.md)
+
+## 📖 技术文档**实现细节** - 代码结构和核心模块
+
+
+
+### 架构与实现---
+
+- [AI-Adapter-Architecture.md](./AI-Adapter-Architecture.md) - 整体架构设计
+
+- [AI-Adapter-Implementation.md](./AI-Adapter-Implementation.md) - 实现细节## 📖 详细文档
+
+- [项目定位与边界.md](./项目定位与边界.md) - 项目范围
+
+### Provider 文档
+
+### Provider 文档`docs/providers/` - 8 个 AI Provider 的配置和使用说明
+
+[providers/](./providers/) - 8 个 AI Provider 配置说明
+
+- OpenAI, Anthropic, Gemini, WebLLM (原有)### API 文档
+
+- Chrome AI, LM Studio, Silicon Flow, Backend Proxy (新增)`docs/api/` - Hooks 和组件 API 参考
+
+
+
+### API 参考### 开发记录
+
+- [api/hooks.md](./api/hooks.md) - React Hooks API`docs/开发记录/` - 版本历史和开发报告
+
+- [features/](./features/) - 功能特性文档
+
+### 需求文档
+
+## 📝 历史记录`docs/最新需求/` - 当前需求和规划
+
+
+
+- [开发记录/](./开发记录/) - 版本历史、架构演进---
+
+- [经验教训/](./经验教训/) - 开发经验总结
+
+- [其他/](./其他/) - 技术分析和讨论**快速开始**: 阅读 `HANDOVER.md` 和 `TASKS.md`
+
+- [现状和目标/](./现状和目标/) - 项目介绍和目标
+
+## 📖 文档导航
+
+## 🎯 需求与规划
 
 ### 🎯 项目概览
-- [项目规划](./PROJECT_ROADMAP.md) - 发展方向和技术路线图 ⭐
-- [项目介绍](./现状和目标/项目介绍.md) - 项目简介和API参考（英文版）
-- [项目介绍_中文](./现状和目标/项目介绍_中文.md) - 项目简介和API参考（中文版）
+
+- [最新需求/](./最新需求/) - 当前开发需求- [项目规划](./PROJECT_ROADMAP.md) - 发展方向和技术路线图 ⭐
+
+- [PROJECT_ROADMAP.md](./PROJECT_ROADMAP.md) - 项目路线图- [项目介绍](./现状和目标/项目介绍.md) - 项目简介和API参考（英文版）
+
+- [NEXT_STEPS.md](./NEXT_STEPS.md) - 下一步计划- [项目介绍_中文](./现状和目标/项目介绍_中文.md) - 项目简介和API参考（中文版）
+
 - [项目目标](./现状和目标/项目目标.md) - 核心功能目标和开发计划
-- [项目现状分析](./现状和目标/项目现状分析.md) - 项目进展对比和完成度分析
 
-### 🚀 核心功能
-- [显式Client名称传入](./features/explicit-client-naming.md) - 多实例管理解决方案 ⭐⭐⭐
-- [Provider系统](./providers/) - 支持的LLM提供商配置指南
+---- [项目现状分析](./现状和目标/项目现状分析.md) - 项目进展对比和完成度分析
 
-### 📖 API文档
+
+
+**快速导航**：### 🚀 核心功能
+
+- 接手项目 → [HANDOVER.md](./HANDOVER.md)- [显式Client名称传入](./features/explicit-client-naming.md) - 多实例管理解决方案 ⭐⭐⭐
+
+- 看任务 → [TASKS.md](./TASKS.md)- [Provider系统](./providers/) - 支持的LLM提供商配置指南
+
+- 懂架构 → [AI-Adapter-Architecture.md](./AI-Adapter-Architecture.md)
+
+- 用 Provider → [providers/](./providers/)### 📖 API文档
+
 - [Hooks API](./api/hooks.md) - React Hooks详细说明
 - [组件API](./components/) - UI组件属性和用法（待补充）
 - [Client API](./client/) - LlmClient接口说明（待补充）

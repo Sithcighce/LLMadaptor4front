@@ -33,6 +33,7 @@ export const loadInitialState = (storageKey: string): ConnectorState => {
     const parsed = JSON.parse(stored) as ConnectorState;
     const defaultConfigs = getAllDefaultConfigs();
     
+    // Merge parsed configs with defaults for all providers to satisfy typing
     return {
       selectedProviderId: parsed.selectedProviderId ?? 'openai',
       providerConfigs: {
@@ -40,6 +41,10 @@ export const loadInitialState = (storageKey: string): ConnectorState => {
         anthropic: { ...defaultConfigs.anthropic, ...(parsed.providerConfigs?.anthropic ?? {}) },
         gemini: { ...defaultConfigs.gemini, ...(parsed.providerConfigs?.gemini ?? {}) },
         webllm: { ...defaultConfigs.webllm, ...(parsed.providerConfigs?.webllm ?? {}) },
+        'chrome-ai': { ...defaultConfigs['chrome-ai'], ...(parsed.providerConfigs?.['chrome-ai'] ?? {}) },
+        lmstudio: { ...defaultConfigs.lmstudio, ...(parsed.providerConfigs?.lmstudio ?? {}) },
+        siliconflow: { ...defaultConfigs.siliconflow, ...(parsed.providerConfigs?.siliconflow ?? {}) },
+        'backend-proxy': { ...defaultConfigs['backend-proxy'], ...(parsed.providerConfigs?.['backend-proxy'] ?? {}) },
       },
     };
   } catch (error) {

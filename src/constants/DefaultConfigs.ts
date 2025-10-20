@@ -5,7 +5,7 @@
  * 从 useConnectorController 中提取，用于未来的 useAdvancedSettings
  */
 
-export const PROVIDER_IDS = ['openai', 'anthropic', 'gemini', 'webllm'] as const;
+export const PROVIDER_IDS = ['openai', 'anthropic', 'gemini', 'webllm', 'chrome-ai', 'lmstudio', 'siliconflow', 'backend-proxy'] as const;
 
 export type ProviderId = (typeof PROVIDER_IDS)[number];
 
@@ -54,6 +54,43 @@ export const DEFAULT_PROVIDER_CONFIGS: Record<ProviderId, ProviderConfigState> =
     systemMessage: '',
     engineConfig: '',
     chatCompletionOptions: '',
+  },
+  'chrome-ai': {
+    model: 'chrome-ai-builtin',
+    responseFormat: 'stream',
+    systemMessage: '',
+    temperature: '0.7',
+    topK: '3',
+  },
+  lmstudio: {
+    mode: 'direct',
+    apiKey: 'lm-studio',
+    baseUrl: 'http://127.0.0.1:1234/v1',
+    model: '',
+    responseFormat: 'stream',
+    systemMessage: '',
+    headers: '',
+    body: '',
+  },
+  siliconflow: {
+    mode: 'direct',
+    apiKey: '',
+    baseUrl: 'https://api.siliconflow.cn/v1/chat/completions',
+    model: 'Qwen/Qwen2.5-7B-Instruct',
+    responseFormat: 'stream',
+    systemMessage: '',
+    headers: '',
+    body: '',
+  },
+  'backend-proxy': {
+    mode: 'backend',
+    apiKey: '',
+    baseUrl: 'http://localhost:3003/api/ai/proxy',
+    model: '',
+    responseFormat: 'stream',
+    systemMessage: '',
+    headers: '',
+    body: '',
   },
 };
 

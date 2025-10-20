@@ -1,9 +1,9 @@
 import React from 'react';
 import './App.css';
-import { ChatTest } from './test/ChatTest';
+import { NewProvidersTest } from './test/NewProvidersTest';
 
 function App() {
-  return <ChatTest />;
+  return <NewProvidersTest />;
 }
 
 export default App;

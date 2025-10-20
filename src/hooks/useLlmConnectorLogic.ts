@@ -1,9 +1,12 @@
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
-// import { TokenJS } from 'token.js/dist/index.cjs';  // 临时注释，避免类型错误
+import TokenJS from 'token.js';
 import { LlmClient } from '../client/LlmClient';
 import type { ProviderId, ConnectorStatus, TokenUsage } from '../types/index';
-
+import { createChromeAIProvider } from '../providers/ChromeAIProvider';
+import { createLMStudioProvider } from '../providers/LMStudioProvider';
+import { createSiliconFlowProvider } from '../providers/SiliconFlowProvider';
+import { createBackendProxyProvider } from '../providers/BackendProxyProvider';
 
 
 /**
@@ -203,38 +206,76 @@ export const useLlmConnectorLogic = (storageKey: string = 'llm-connector-config'
 
   // --- Handlers ---
   const handleConnect = useCallback(async () => {
-    if (!apiKey) {
-      setError(new Error('API Key is required.'));
-      return;
-    }
     setStatus('connecting');
     setError(null);
 
     try {
-      // 直接通过获取模型来验证连接
-      const fetchedModels = await fetchModels();
-      
-      // 检查是否获取到模型
-      if (fetchedModels.length === 0) {
-        throw new Error('No models found for this provider');
+      let client: LlmClient | null = null;
+
+      // 根据不同的 provider 创建对应的 client
+      if (providerId === 'chrome-ai') {
+        // Chrome AI 不需要 API Key
+        client = await createChromeAIProvider();
+        setModelOptions(['chrome-ai-builtin']);
+        setModel('chrome-ai-builtin');
+        
+      } else if (providerId === 'lmstudio') {
+        // LM Studio 本地服务器
+        client = await createLMStudioProvider(baseUrl || 'http://localhost:1234/v1', model);
+        // 模型列表已在 createLMStudioProvider 中获取
+        
+      } else if (providerId === 'backend-proxy') {
+        // 后端代理模式
+        client = createBackendProxyProvider(baseUrl || '/api/ai/proxy', model);
+        setModelOptions(['backend-managed']);
+        if (!model) setModel('backend-managed');
+        
+      } else if (providerId === 'siliconflow') {
+        // 硅基流动
+        if (!apiKey) {
+          throw new Error('API Key is required for Silicon Flow');
+        }
+        client = createSiliconFlowProvider(apiKey, baseUrl || 'https://api.siliconflow.cn/v1', model);
+        // 使用预定义模型列表
+        const siliconflowModels = [
+          'Qwen/Qwen2.5-7B-Instruct',
+          'Qwen/Qwen2.5-14B-Instruct',
+          'Qwen/Qwen2.5-32B-Instruct',
+          'deepseek-ai/DeepSeek-V2.5',
+        ];
+        setModelOptions(siliconflowModels);
+        if (!model) setModel(siliconflowModels[0]);
+        
+      } else {
+        // OpenAI, Anthropic, Gemini - 使用原有逻辑
+        if (!apiKey) {
+          throw new Error('API Key is required.');
+        }
+        
+        // 直接通过获取模型来验证连接
+        const fetchedModels = await fetchModels();
+        
+        // 检查是否获取到模型
+        if (fetchedModels.length === 0) {
+          throw new Error('No models found for this provider');
+        }
+        
+        // 如果模型获取成功，创建 client 并设置为已连接
+        const config = {
+          apiKey,
+          baseURL: baseUrl || undefined,
+        };
+        const tokenJsClient = new TokenJS(config);
+        client = new LlmClient(tokenJsClient, providerId, model);
       }
-      
-      // 如果模型获取成功，创建 client 并设置为已连接
-      const config = {
-        apiKey,
-        baseURL: baseUrl || undefined,
-      };
-      // const tokenJsClient = new TokenJS(config);  // 临时注释
-      // const client = new LlmClient(tokenJsClient, providerId, model);  // 临时注释
-      const client = null; // 临时解决方案，用于测试架构
+
       setLlmClient(client);
       setStatus('connected');
       
       console.log('handleConnect success:', { 
         status: 'connected', 
         providerId, 
-        model,
-        fetchedModelsCount: fetchedModels.length
+        model
       });
     } catch (e) {
       const connectError = e instanceof Error ? e : new Error('Connection failed: ' + String(e));
@@ -244,6 +285,7 @@ export const useLlmConnectorLogic = (storageKey: string = 'llm-connector-config'
       setModelOptions([]); // 清空模型列表
     }
   }, [apiKey, baseUrl, providerId, model, fetchModels]);
+
 
   const handleDisconnect = useCallback(() => {
     setLlmClient(null);
