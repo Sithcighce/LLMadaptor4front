@@ -1,0 +1,8 @@
+{
+  "buildCommand": "npm ci --include=optional --legacy-peer-deps && npm run build",
+  "installCommand": "npm ci --include=optional --legacy-peer-deps",
+  "framework": "vite",
+  "env": {
+    "NPM_CONFIG_OPTIONAL": "true"
+  }
+}
