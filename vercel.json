@@ -1,7 +1,11 @@
 {
-  "buildCommand": "npm ci --include=optional --legacy-peer-deps && npm run build",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "buildCommand": "npm ci --include=optional --legacy-peer-deps && npm run build:demo",
   "installCommand": "npm ci --include=optional --legacy-peer-deps",
   "framework": "vite",
+  "outputDirectory": "dist",
   "env": {
     "NPM_CONFIG_OPTIONAL": "true"
   }
